@@ -1,17 +1,21 @@
 import sys
+import webbrowser
 import os
 import io
 import logging
 import subprocess
 import zipfile
+from functools import partial
+
 import py7zr
 import shutil
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QProgressBar
-from PyQt5.QtGui import QPixmap, QPalette, QBrush
-from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QProgressBar, QHBoxLayout, \
+    QToolButton
+from PyQt5.QtGui import QPixmap, QPalette, QBrush, QIcon
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer, QSize
 
 # Встроенное содержимое style.qss
 style_qss = """
@@ -47,6 +51,13 @@ QProgressBar::chunk {
     background-color: #0057e7;
     width: 20px;
 }
+QToolButton {
+    background-color: black;
+    display: flex;
+    border: none;
+    background: transparent;
+    padding: 0px;
+}
 """
 
 # Инициализация API Google Drive
@@ -64,7 +75,8 @@ credentials_info = {
     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/bookingtest%40kiberone-422110.iam.gserviceaccount.com",
     "universe_domain": "googleapis.com"
 }
-credentials = service_account.Credentials.from_service_account_info(credentials_info)
+credentials = service_account.Credentials.from_service_account_info(
+    credentials_info)
 service = build('drive', 'v3', credentials=credentials)
 
 FOLDER_ID = '1-ZJfs05U-aTmu2saVtdJQn3GibxzXQbo'
@@ -72,7 +84,9 @@ LOCAL_VERSION_FILE = 'version.txt'
 REMOTE_VERSION_FILE = 'remote_version.txt'
 LOCAL_UPDATE_FILE = 'update.7z'
 
-logging.basicConfig(level=logging.INFO, filename='launcher.log', filemode='w', format='%(asctime)s - %(levellevelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, filename='launcher.log', filemode='w',
+                    format='%(asctime)s - %(levellevelname)s - %(message)s')
+
 
 def resource_path(relative_path):
     if getattr(sys, 'frozen', False):
@@ -81,6 +95,23 @@ def resource_path(relative_path):
         base_path = os.path.dirname(__file__)
 
     return os.path.join(base_path, relative_path)
+
+
+FOOTER_BUTTONS_ICONS = (
+    (resource_path("assets/boosty.png"),
+     "https://boosty.to/skyrim_rfad_chicken"),
+    (resource_path("assets/Patron.png"),
+     "https://www.patreon.com/RFaD_ChickenEdition/membership"),
+    (resource_path("assets/Discord.png"),
+     "https://discord.gg/q2ygjdk8Gv"),
+    (resource_path("assets/boosty.png"),
+     "https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"))
+
+
+def open_link(link: str) -> None:
+    browser = webbrowser.get()
+    browser.open_new_tab(link)
+
 
 class VersionCheckThread(QThread):
     versionCheckCompleted = pyqtSignal(str, str)
@@ -92,14 +123,23 @@ class VersionCheckThread(QThread):
 
     def run(self):
         files = self.get_drive_files()
-        version_file = next((f for f in files if f['mimeType'] == 'application/vnd.google-apps.document'), None)
+        version_file = next(
+            (f for f in files if f['mimeType'] == 'application/vnd.google-apps.document'),
+            None)
 
         if not version_file:
             self.versionCheckCompleted.emit(None, None)
             return
 
-        local_version_path = os.path.join(self.game_path, 'MO2/mods/RFAD_PATCH', LOCAL_VERSION_FILE)
-        self.download_file(service, version_file['id'], 'remote_version.txt', version_file['mimeType'])
+        local_version_path = os.path.join(
+            self.game_path,
+            'MO2/mods/RFAD_PATCH',
+            LOCAL_VERSION_FILE)
+        self.download_file(
+            service,
+            version_file['id'],
+            'remote_version.txt',
+            version_file['mimeType'])
 
         with open(local_version_path, 'r') as file:
             local_version = file.read().strip()
@@ -128,8 +168,12 @@ class VersionCheckThread(QThread):
         logging.info(f"Файл {destination} успешно загружен.")
 
     def get_drive_files(self):
-        results = self.service.files().list(q=f"'{FOLDER_ID}' in parents", pageSize=10, fields="files(id, name, mimeType)").execute()
+        results = self.service.files().list(
+            q=f"'{FOLDER_ID}' in parents",
+            pageSize=10,
+            fields="files(id, name, mimeType)").execute()
         return results.get('files', [])
+
 
 class DownloadThread(QThread):
     progressChanged = pyqtSignal(int)
@@ -155,6 +199,7 @@ class DownloadThread(QThread):
                     last_progress = progress
         self.downloadFinished.emit()
 
+
 class SkyrimLauncher(QWidget):
     def __init__(self):
         super().__init__()
@@ -179,7 +224,13 @@ class SkyrimLauncher(QWidget):
         # Установка фонового изображения
         pixmap = QPixmap(resource_path('assets/background.jpg'))
         palette = QPalette()
-        palette.setBrush(QPalette.Background, QBrush(pixmap.scaled(self.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)))
+        palette.setBrush(
+            QPalette.Background,
+            QBrush(
+                pixmap.scaled(
+                    self.size(),
+                    Qt.IgnoreAspectRatio,
+                    Qt.SmoothTransformation)))
         self.setPalette(palette)
 
         layout = QVBoxLayout()
@@ -213,16 +264,30 @@ class SkyrimLauncher(QWidget):
         self.progress_bar.setVisible(False)
         layout.addWidget(self.progress_bar)
 
+        button_layout = QHBoxLayout()
+
+        for url_icon, link in FOOTER_BUTTONS_ICONS:
+            button = QToolButton(self)
+            button.setIcon(QIcon(url_icon))
+            button.setIconSize(QSize(50, 50))
+            button.setToolButtonStyle(Qt.ToolButtonIconOnly)
+            button.clicked.connect(partial(open_link, link=link))
+            button_layout.addWidget(button)
+
+        layout.addLayout(button_layout)
+
         self.setLayout(layout)
 
     def check_updates_async(self):
         self.version_thread = VersionCheckThread(service, self.game_path)
-        self.version_thread.versionCheckCompleted.connect(self.on_version_check_completed)
+        self.version_thread.versionCheckCompleted.connect(
+            self.on_version_check_completed)
         self.version_thread.start()
 
     def on_version_check_completed(self, local_version, remote_version):
         if local_version is None or remote_version is None:
-            self.update_status.setText('Status: Required files not found on Google Drive')
+            self.update_status.setText(
+                'Status: Required files not found on Google Drive')
             return
 
         self.local_version.setText(f'Local Version: {local_version}')
@@ -241,7 +306,11 @@ class SkyrimLauncher(QWidget):
             return
 
         files = self.get_drive_files()
-        update_file = next((f for f in files if f['mimeType'] in ['application/x-7z-compressed', 'application/x-zip-compressed']), None)
+        update_file = next(
+            (f for f in files if f['mimeType'] in [
+                'application/x-7z-compressed',
+                'application/x-zip-compressed']),
+            None)
         if not update_file:
             self.update_status.setText('Status: Update file not found')
             return
@@ -249,9 +318,11 @@ class SkyrimLauncher(QWidget):
         self.progress_bar.setVisible(True)
         self.progress_bar.setValue(0)
 
-        self.download_thread = DownloadThread(service, update_file['id'], LOCAL_UPDATE_FILE)
+        self.download_thread = DownloadThread(
+            service, update_file['id'], LOCAL_UPDATE_FILE)
         self.download_thread.progressChanged.connect(self.update_progress)
-        self.download_thread.downloadFinished.connect(self.on_download_finished)
+        self.download_thread.downloadFinished.connect(
+            self.on_download_finished)
         self.download_thread.start()
 
     def update_progress(self, progress):
@@ -259,18 +330,27 @@ class SkyrimLauncher(QWidget):
 
     def on_download_finished(self):
         self.update_status.setText('Status: Unpacking...')
-        self.extract_archive(LOCAL_UPDATE_FILE, os.path.join(self.game_path, 'MO2/mods/RFAD_PATCH'))
+        self.extract_archive(
+            LOCAL_UPDATE_FILE,
+            os.path.join(
+                self.game_path,
+                'MO2/mods/RFAD_PATCH'))
         self.update_status.setText('Status: Update complete')
         self.progress_bar.setValue(100)
 
         # Заменяем локальный файл version.txt на новый
         try:
-            new_version_path = os.path.join(self.game_path, REMOTE_VERSION_FILE)
-            local_version_path = os.path.join(self.game_path, 'MO2/mods/RFAD_PATCH', LOCAL_VERSION_FILE)
+            new_version_path = os.path.join(
+                self.game_path, REMOTE_VERSION_FILE)
+            local_version_path = os.path.join(
+                self.game_path, 'MO2/mods/RFAD_PATCH', LOCAL_VERSION_FILE)
             shutil.copyfile(new_version_path, local_version_path)
-            logging.info(f"Local version file replaced with new version: {local_version_path}")
+            logging.info(
+                f"Local version file replaced with new version: {local_version_path}")
         except Exception as e:
-            self.update_status.setText(f'Status: Error replacing version file: {str(e)}')
+            self.update_status.setText(
+                f'Status: Error replacing version file: {
+                    str(e)}')
             logging.error(f"Error replacing version file: {str(e)}")
 
     def play_game(self):
@@ -286,7 +366,10 @@ class SkyrimLauncher(QWidget):
             self.update_status.setText('Status: Skyrim.exe not found')
 
     def get_drive_files(self):
-        results = service.files().list(q=f"'{FOLDER_ID}' in parents", pageSize=10, fields="files(id, name, mimeType)").execute()
+        results = service.files().list(
+            q=f"'{FOLDER_ID}' in parents",
+            pageSize=10,
+            fields="files(id, name, mimeType)").execute()
         return results.get('files', [])
 
     def extract_archive(self, archive_path, extract_to):
@@ -302,6 +385,7 @@ class SkyrimLauncher(QWidget):
 
     def update_ui(self):
         QApplication.processEvents()  # Принудительное обновление интерфейса
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

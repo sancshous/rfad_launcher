@@ -9,8 +9,9 @@ import shutil
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QProgressBar
-from PyQt5.QtGui import QPixmap, QPalette, QBrush
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QProgressBar, QHBoxLayout, \
+    QToolButton
+from PyQt5.QtGui import QPixmap, QPalette, QBrush, QIcon
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer
 
 # Встроенное содержимое style.qss
@@ -72,7 +73,9 @@ LOCAL_VERSION_FILE = 'version.txt'
 REMOTE_VERSION_FILE = 'remote_version.txt'
 LOCAL_UPDATE_FILE = 'update.7z'
 
-logging.basicConfig(level=logging.INFO, filename='launcher.log', filemode='w', format='%(asctime)s - %(levellevelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, filename='launcher.log', filemode='w',
+                    format='%(asctime)s - %(levellevelname)s - %(message)s')
+
 
 def resource_path(relative_path):
     if getattr(sys, 'frozen', False):
@@ -81,6 +84,7 @@ def resource_path(relative_path):
         base_path = os.path.dirname(__file__)
 
     return os.path.join(base_path, relative_path)
+
 
 class VersionCheckThread(QThread):
     versionCheckCompleted = pyqtSignal(str, str)
@@ -128,8 +132,10 @@ class VersionCheckThread(QThread):
         logging.info(f"Файл {destination} успешно загружен.")
 
     def get_drive_files(self):
-        results = self.service.files().list(q=f"'{FOLDER_ID}' in parents", pageSize=10, fields="files(id, name, mimeType)").execute()
+        results = self.service.files().list(q=f"'{FOLDER_ID}' in parents", pageSize=10,
+                                            fields="files(id, name, mimeType)").execute()
         return results.get('files', [])
+
 
 class DownloadThread(QThread):
     progressChanged = pyqtSignal(int)
@@ -155,6 +161,7 @@ class DownloadThread(QThread):
                     last_progress = progress
         self.downloadFinished.emit()
 
+
 class SkyrimLauncher(QWidget):
     def __init__(self):
         super().__init__()
@@ -179,7 +186,8 @@ class SkyrimLauncher(QWidget):
         # Установка фонового изображения
         pixmap = QPixmap(resource_path('assets/background.jpg'))
         palette = QPalette()
-        palette.setBrush(QPalette.Background, QBrush(pixmap.scaled(self.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)))
+        palette.setBrush(QPalette.Background,
+                         QBrush(pixmap.scaled(self.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)))
         self.setPalette(palette)
 
         layout = QVBoxLayout()
@@ -213,6 +221,22 @@ class SkyrimLauncher(QWidget):
         self.progress_bar.setVisible(False)
         layout.addWidget(self.progress_bar)
 
+        button_layout = QHBoxLayout()
+
+        # Создаем кнопки и добавляем их в горизонтальный лэйаут
+        for i in range(4):
+            button = QToolButton(self)
+            button.setIcon(QIcon(f"assets/icon.ico"))  # Замените на путь к вашим иконкам
+            button.setIconSize(button.size())
+            button.setToolButtonStyle(Qt.ToolButtonIconOnly)
+            button.setStyleSheet("""
+                        QToolButton {
+                            background-color: black;
+                        }
+                        """)
+            button_layout.addWidget(button)
+        layout.addLayout(button_layout)
+
         self.setLayout(layout)
 
     def check_updates_async(self):
@@ -241,7 +265,9 @@ class SkyrimLauncher(QWidget):
             return
 
         files = self.get_drive_files()
-        update_file = next((f for f in files if f['mimeType'] in ['application/x-7z-compressed', 'application/x-zip-compressed']), None)
+        update_file = next(
+            (f for f in files if f['mimeType'] in ['application/x-7z-compressed', 'application/x-zip-compressed']),
+            None)
         if not update_file:
             self.update_status.setText('Status: Update file not found')
             return
@@ -286,7 +312,8 @@ class SkyrimLauncher(QWidget):
             self.update_status.setText('Status: Skyrim.exe not found')
 
     def get_drive_files(self):
-        results = service.files().list(q=f"'{FOLDER_ID}' in parents", pageSize=10, fields="files(id, name, mimeType)").execute()
+        results = service.files().list(q=f"'{FOLDER_ID}' in parents", pageSize=10,
+                                       fields="files(id, name, mimeType)").execute()
         return results.get('files', [])
 
     def extract_archive(self, archive_path, extract_to):
@@ -302,6 +329,7 @@ class SkyrimLauncher(QWidget):
 
     def update_ui(self):
         QApplication.processEvents()  # Принудительное обновление интерфейса
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -65,7 +65,8 @@ credentials_info = {
     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/bookingtest%40kiberone-422110.iam.gserviceaccount.com",
     "universe_domain": "googleapis.com"
 }
-credentials = service_account.Credentials.from_service_account_info(credentials_info)
+credentials = service_account.Credentials.from_service_account_info(
+    credentials_info)
 service = build('drive', 'v3', credentials=credentials)
 
 FOLDER_ID = '1-ZJfs05U-aTmu2saVtdJQn3GibxzXQbo'
@@ -96,14 +97,23 @@ class VersionCheckThread(QThread):
 
     def run(self):
         files = self.get_drive_files()
-        version_file = next((f for f in files if f['mimeType'] == 'application/vnd.google-apps.document'), None)
+        version_file = next(
+            (f for f in files if f['mimeType'] == 'application/vnd.google-apps.document'),
+            None)
 
         if not version_file:
             self.versionCheckCompleted.emit(None, None)
             return
 
-        local_version_path = os.path.join(self.game_path, 'MO2/mods/RFAD_PATCH', LOCAL_VERSION_FILE)
-        self.download_file(service, version_file['id'], 'remote_version.txt', version_file['mimeType'])
+        local_version_path = os.path.join(
+            self.game_path,
+            'MO2/mods/RFAD_PATCH',
+            LOCAL_VERSION_FILE)
+        self.download_file(
+            service,
+            version_file['id'],
+            'remote_version.txt',
+            version_file['mimeType'])
 
         with open(local_version_path, 'r') as file:
             local_version = file.read().strip()
@@ -132,8 +142,10 @@ class VersionCheckThread(QThread):
         logging.info(f"Файл {destination} успешно загружен.")
 
     def get_drive_files(self):
-        results = self.service.files().list(q=f"'{FOLDER_ID}' in parents", pageSize=10,
-                                            fields="files(id, name, mimeType)").execute()
+        results = self.service.files().list(
+            q=f"'{FOLDER_ID}' in parents",
+            pageSize=10,
+            fields="files(id, name, mimeType)").execute()
         return results.get('files', [])
 
 
@@ -186,8 +198,13 @@ class SkyrimLauncher(QWidget):
         # Установка фонового изображения
         pixmap = QPixmap(resource_path('assets/background.jpg'))
         palette = QPalette()
-        palette.setBrush(QPalette.Background,
-                         QBrush(pixmap.scaled(self.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)))
+        palette.setBrush(
+            QPalette.Background,
+            QBrush(
+                pixmap.scaled(
+                    self.size(),
+                    Qt.IgnoreAspectRatio,
+                    Qt.SmoothTransformation)))
         self.setPalette(palette)
 
         layout = QVBoxLayout()
@@ -226,7 +243,8 @@ class SkyrimLauncher(QWidget):
         # Создаем кнопки и добавляем их в горизонтальный лэйаут
         for i in range(4):
             button = QToolButton(self)
-            button.setIcon(QIcon(f"assets/icon.ico"))  # Замените на путь к вашим иконкам
+            # Замените на путь к вашим иконкам
+            button.setIcon(QIcon(f"assets/icon.ico"))
             button.setIconSize(button.size())
             button.setToolButtonStyle(Qt.ToolButtonIconOnly)
             button.setStyleSheet("""
@@ -241,12 +259,14 @@ class SkyrimLauncher(QWidget):
 
     def check_updates_async(self):
         self.version_thread = VersionCheckThread(service, self.game_path)
-        self.version_thread.versionCheckCompleted.connect(self.on_version_check_completed)
+        self.version_thread.versionCheckCompleted.connect(
+            self.on_version_check_completed)
         self.version_thread.start()
 
     def on_version_check_completed(self, local_version, remote_version):
         if local_version is None or remote_version is None:
-            self.update_status.setText('Status: Required files not found on Google Drive')
+            self.update_status.setText(
+                'Status: Required files not found on Google Drive')
             return
 
         self.local_version.setText(f'Local Version: {local_version}')
@@ -266,7 +286,9 @@ class SkyrimLauncher(QWidget):
 
         files = self.get_drive_files()
         update_file = next(
-            (f for f in files if f['mimeType'] in ['application/x-7z-compressed', 'application/x-zip-compressed']),
+            (f for f in files if f['mimeType'] in [
+                'application/x-7z-compressed',
+                'application/x-zip-compressed']),
             None)
         if not update_file:
             self.update_status.setText('Status: Update file not found')
@@ -275,9 +297,11 @@ class SkyrimLauncher(QWidget):
         self.progress_bar.setVisible(True)
         self.progress_bar.setValue(0)
 
-        self.download_thread = DownloadThread(service, update_file['id'], LOCAL_UPDATE_FILE)
+        self.download_thread = DownloadThread(
+            service, update_file['id'], LOCAL_UPDATE_FILE)
         self.download_thread.progressChanged.connect(self.update_progress)
-        self.download_thread.downloadFinished.connect(self.on_download_finished)
+        self.download_thread.downloadFinished.connect(
+            self.on_download_finished)
         self.download_thread.start()
 
     def update_progress(self, progress):
@@ -285,18 +309,27 @@ class SkyrimLauncher(QWidget):
 
     def on_download_finished(self):
         self.update_status.setText('Status: Unpacking...')
-        self.extract_archive(LOCAL_UPDATE_FILE, os.path.join(self.game_path, 'MO2/mods/RFAD_PATCH'))
+        self.extract_archive(
+            LOCAL_UPDATE_FILE,
+            os.path.join(
+                self.game_path,
+                'MO2/mods/RFAD_PATCH'))
         self.update_status.setText('Status: Update complete')
         self.progress_bar.setValue(100)
 
         # Заменяем локальный файл version.txt на новый
         try:
-            new_version_path = os.path.join(self.game_path, REMOTE_VERSION_FILE)
-            local_version_path = os.path.join(self.game_path, 'MO2/mods/RFAD_PATCH', LOCAL_VERSION_FILE)
+            new_version_path = os.path.join(
+                self.game_path, REMOTE_VERSION_FILE)
+            local_version_path = os.path.join(
+                self.game_path, 'MO2/mods/RFAD_PATCH', LOCAL_VERSION_FILE)
             shutil.copyfile(new_version_path, local_version_path)
-            logging.info(f"Local version file replaced with new version: {local_version_path}")
+            logging.info(
+                f"Local version file replaced with new version: {local_version_path}")
         except Exception as e:
-            self.update_status.setText(f'Status: Error replacing version file: {str(e)}')
+            self.update_status.setText(
+                f'Status: Error replacing version file: {
+                    str(e)}')
             logging.error(f"Error replacing version file: {str(e)}")
 
     def play_game(self):
@@ -312,8 +345,10 @@ class SkyrimLauncher(QWidget):
             self.update_status.setText('Status: Skyrim.exe not found')
 
     def get_drive_files(self):
-        results = service.files().list(q=f"'{FOLDER_ID}' in parents", pageSize=10,
-                                       fields="files(id, name, mimeType)").execute()
+        results = service.files().list(
+            q=f"'{FOLDER_ID}' in parents",
+            pageSize=10,
+            fields="files(id, name, mimeType)").execute()
         return results.get('files', [])
 
     def extract_archive(self, archive_path, extract_to):

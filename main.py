@@ -1,9 +1,12 @@
 import sys
+import webbrowser
 import os
 import io
 import logging
 import subprocess
 import zipfile
+from functools import partial
+
 import py7zr
 import shutil
 from google.oauth2 import service_account
@@ -94,8 +97,13 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-FOOTER_BUTTONS_ICONS = (resource_path("assets/boosty.png"), resource_path("assets/Patron.png"),
-                        resource_path("assets/Discord.png"), resource_path("assets/boosty.png"))
+FOOTER_BUTTONS_ICONS = ((resource_path("assets/boosty.png"), "https://boosty.to/skyrim_rfad_chicken"), (resource_path("assets/Patron.png"), "https://www.patreon.com/RFaD_ChickenEdition/membership"),
+                        (resource_path("assets/Discord.png"), "https://discord.gg/q2ygjdk8Gv"), (resource_path("assets/boosty.png"), "https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"))
+
+
+def open_link(link: str) -> None:
+    browser = webbrowser.get()
+    browser.open_new_tab(link)
 
 
 class VersionCheckThread(QThread):
@@ -251,12 +259,14 @@ class SkyrimLauncher(QWidget):
 
         button_layout = QHBoxLayout()
 
-        for url_icon in FOOTER_BUTTONS_ICONS:
+        for url_icon, link in FOOTER_BUTTONS_ICONS:
             button = QToolButton(self)
             button.setIcon(QIcon(url_icon))
             button.setIconSize(QSize(50, 50))
             button.setToolButtonStyle(Qt.ToolButtonIconOnly)
+            button.clicked.connect(partial(open_link, link=link))
             button_layout.addWidget(button)
+
         layout.addLayout(button_layout)
 
         self.setLayout(layout)

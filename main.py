@@ -12,7 +12,7 @@ from googleapiclient.http import MediaIoBaseDownload
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QProgressBar, QHBoxLayout, \
     QToolButton
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QIcon
-from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer, QSize
 
 # Встроенное содержимое style.qss
 style_qss = """
@@ -47,6 +47,13 @@ QProgressBar {
 QProgressBar::chunk {
     background-color: #0057e7;
     width: 20px;
+}
+QToolButton {
+    background-color: black;
+    display: flex;
+    border: none;
+    background: transparent;
+    padding: 0px;
 }
 """
 
@@ -85,6 +92,10 @@ def resource_path(relative_path):
         base_path = os.path.dirname(__file__)
 
     return os.path.join(base_path, relative_path)
+
+
+FOOTER_BUTTONS_ICONS = (resource_path("assets/boosty.png"), resource_path("assets/Patron.png"),
+                        resource_path("assets/Discord.png"), resource_path("assets/boosty.png"))
 
 
 class VersionCheckThread(QThread):
@@ -240,18 +251,11 @@ class SkyrimLauncher(QWidget):
 
         button_layout = QHBoxLayout()
 
-        # Создаем кнопки и добавляем их в горизонтальный лэйаут
-        for i in range(4):
+        for url_icon in FOOTER_BUTTONS_ICONS:
             button = QToolButton(self)
-            # Замените на путь к вашим иконкам
-            button.setIcon(QIcon(f"assets/icon.ico"))
-            button.setIconSize(button.size())
+            button.setIcon(QIcon(url_icon))
+            button.setIconSize(QSize(50, 50))
             button.setToolButtonStyle(Qt.ToolButtonIconOnly)
-            button.setStyleSheet("""
-                        QToolButton {
-                            background-color: black;
-                        }
-                        """)
             button_layout.addWidget(button)
         layout.addLayout(button_layout)
 
@@ -329,7 +333,7 @@ class SkyrimLauncher(QWidget):
         except Exception as e:
             self.update_status.setText(
                 f'Status: Error replacing version file: {
-                    str(e)}')
+                str(e)}')
             logging.error(f"Error replacing version file: {str(e)}")
 
     def play_game(self):

@@ -97,8 +97,15 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-FOOTER_BUTTONS_ICONS = ((resource_path("assets/boosty.png"), "https://boosty.to/skyrim_rfad_chicken"), (resource_path("assets/Patron.png"), "https://www.patreon.com/RFaD_ChickenEdition/membership"),
-                        (resource_path("assets/Discord.png"), "https://discord.gg/q2ygjdk8Gv"), (resource_path("assets/boosty.png"), "https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"))
+FOOTER_BUTTONS_ICONS = (
+    (resource_path("assets/boosty.png"),
+     "https://boosty.to/skyrim_rfad_chicken"),
+    (resource_path("assets/Patron.png"),
+     "https://www.patreon.com/RFaD_ChickenEdition/membership"),
+    (resource_path("assets/Discord.png"),
+     "https://discord.gg/q2ygjdk8Gv"),
+    (resource_path("assets/boosty.png"),
+     "https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"))
 
 
 def open_link(link: str) -> None:
@@ -343,7 +350,7 @@ class SkyrimLauncher(QWidget):
         except Exception as e:
             self.update_status.setText(
                 f'Status: Error replacing version file: {
-                str(e)}')
+                    str(e)}')
             logging.error(f"Error replacing version file: {str(e)}")
 
     def play_game(self):

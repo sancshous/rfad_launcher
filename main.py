@@ -209,7 +209,7 @@ class SkyrimLauncher(QWidget):
 
         # Определение пути к папке с игрой (текущая директория)
         self.game_path = os.path.abspath(os.getcwd())
-        self.selected_game_folder.setText(f'Game folder: {self.game_path}')
+        #self.selected_game_folder.setText(f'Game folder: {self.game_path}')
 
         # Асинхронная проверка обновлений после отображения окна
         self.check_updates_async()
@@ -219,21 +219,26 @@ class SkyrimLauncher(QWidget):
         self.timer.timeout.connect(self.update_ui)
         self.timer.start(100)  # Обновление каждые 100 мс
 
+    def update_background(self):
+        pixmap = QPixmap('assets/background2.png')
+        palette = self.palette()
+        scaled_pixmap = pixmap.scaled(
+            self.size(),
+            Qt.IgnoreAspectRatio,
+            Qt.SmoothTransformation)
+        palette.setBrush(QPalette.Background, QBrush(scaled_pixmap))
+        self.setPalette(palette)
+
+    def resizeEvent(self, event):
+        self.update_background()
+        super().resizeEvent(event)
+
     def initUI(self):
         #self.setWindowTitle('RFAD Game Launcher')
         self.setGeometry(200, 200, 800, 480)
 
         # Установка фонового изображения
-        pixmap = QPixmap(resource_path('assets/background.png'))
-        palette = self.palette()
-        palette.setBrush(
-            QPalette.Background,
-            QBrush(
-                pixmap.scaled(
-                    self.size(),
-                    Qt.IgnoreAspectRatio,
-                    Qt.SmoothTransformation)))
-        self.setPalette(palette)
+        self.update_background()
 
         layout = QVBoxLayout()
 
@@ -241,26 +246,62 @@ class SkyrimLauncher(QWidget):
         #self.title.setObjectName('title')
         #layout.addWidget(self.title)
 
-        self.selected_game_folder = QLabel('Game folder: None', self)
-        layout.addWidget(self.selected_game_folder)
+        # self.selected_game_folder = QLabel('Game folder: None', self)
+        # layout.addWidget(self.selected_game_folder)
 
-        self.update_status = QLabel('Status: Initializing...', self)
-        layout.addWidget(self.update_status)
+        # self.update_status = QLabel('Status: Initializing...', self)
+        # layout.addWidget(self.update_status)
+        #
+        # self.local_version = QLabel('Local Version: N/A', self)
+        # layout.addWidget(self.local_version)
+        #
+        # self.online_version = QLabel('Online Version: N/A', self)
+        # layout.addWidget(self.online_version)
 
-        self.local_version = QLabel('Local Version: N/A', self)
-        layout.addWidget(self.local_version)
+        # self.update_button = QPushButton('Update', self)
+        # self.update_button.setVisible(False)
+        # self.update_button.clicked.connect(self.start_update)
+        # layout.addWidget(self.update_button)
+        # hbox = QHBoxLayout()
+        # hbox.
+        # layout.addLayout(hbox)
+        layout.addStretch(1)
+        for _ in range(4):
+            button = QToolButton(self)
+            button.setIcon(QIcon(resource_path("assets/middle-button.png")))
+            button.setIconSize(QSize(400, 50))
+            button.setToolButtonStyle(Qt.ToolButtonIconOnly)
 
-        self.online_version = QLabel('Online Version: N/A', self)
-        layout.addWidget(self.online_version)
+            hbox = QHBoxLayout()
+            hbox.addStretch(1)
+            hbox.addWidget(button)
+            hbox.addStretch(1)
+            layout.addLayout(hbox)
 
-        self.update_button = QPushButton('Update', self)
-        self.update_button.setVisible(False)
-        self.update_button.clicked.connect(self.start_update)
-        layout.addWidget(self.update_button)
 
-        self.play_button = QPushButton('Play', self)
-        self.play_button.clicked.connect(self.play_game)
-        layout.addWidget(self.play_button)
+        # self.button2 = QToolButton(self)
+        # self.button2.setIcon(QIcon(resource_path("assets/middle-button.png")))
+        # self.button2.setIconSize(QSize(500, 50))
+        # self.button2.setToolButtonStyle(Qt.ToolButtonIconOnly)
+        # self.play_button.clicked.connect(self.play_game)
+        #
+        # layout.addStretch(1)
+        #
+        # # Создаем горизонтальный layout для центрирования кнопки по горизонтали
+        # hbox = QHBoxLayout()
+        # hbox.addStretch(1)  # Растяжение слева
+        # hbox.addWidget(self.button1) # Добавляем кнопку
+        # hbox.addStretch(1)  # Растяжение справа
+        #
+        # # Добавляем горизонтальный layout в вертикальный
+        # layout.addLayout(hbox)
+        #
+        # # Добавляем растяжение снизу
+        # layout.addStretch(1)
+
+        # Устанавливаем основной layout для виджета
+        layout.addStretch(1)
+        self.setLayout(layout)
 
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setVisible(False)
@@ -292,15 +333,15 @@ class SkyrimLauncher(QWidget):
                 'Status: Required files not found on Google Drive')
             return
 
-        self.local_version.setText(f'Local Version: {local_version}')
-        self.online_version.setText(f'Online Version: {remote_version}')
-
-        if local_version != remote_version:
-            self.update_status.setText('Status: Update available')
-            self.update_button.setVisible(True)
-        else:
-            self.update_status.setText('Status: Up to date')
-            self.update_button.setVisible(False)
+        # self.local_version.setText(f'Local Version: {local_version}')
+        # self.online_version.setText(f'Online Version: {remote_version}')
+        #
+        # if local_version != remote_version:
+        #     self.update_status.setText('Status: Update available')
+        #     self.update_button.setVisible(True)
+        # else:
+        #     self.update_status.setText('Status: Up to date')
+        #     self.update_button.setVisible(False)
 
     def start_update(self):
         if not self.game_path:
@@ -355,17 +396,17 @@ class SkyrimLauncher(QWidget):
                     str(e)}')
             logging.error(f"Error replacing version file: {str(e)}")
 
-    def play_game(self):
-        if not self.game_path:
-            self.update_status.setText('Status: No game path set')
-            return
-
-        game_executable = os.path.join(self.game_path, 'Skyrim.exe')
-        if os.path.exists(game_executable):
-            subprocess.Popen(game_executable, shell=True)
-            self.update_status.setText('Status: Game started')
-        else:
-            self.update_status.setText('Status: Skyrim.exe not found')
+    # def play_game(self):
+    #     if not self.game_path:
+    #         self.update_status.setText('Status: No game path set')
+    #         return
+    #
+    #     game_executable = os.path.join(self.game_path, 'Skyrim.exe')
+    #     if os.path.exists(game_executable):
+    #         subprocess.Popen(game_executable, shell=True)
+    #         self.update_status.setText('Status: Game started')
+    #     else:
+    #         self.update_status.setText('Status: Skyrim.exe not found')
 
     def get_drive_files(self):
         results = service.files().list(

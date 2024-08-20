@@ -53,7 +53,6 @@ QProgressBar::chunk {
 }
 QToolButton {
     background-color: black;
-    display: flex;
     border: none;
     background: transparent;
     padding: 0px;
@@ -84,8 +83,8 @@ LOCAL_VERSION_FILE = 'version.txt'
 REMOTE_VERSION_FILE = 'remote_version.txt'
 LOCAL_UPDATE_FILE = 'update.7z'
 
-logging.basicConfig(level=logging.INFO, filename='launcher.log', filemode='w',
-                    format='%(asctime)s - %(levellevelname)s - %(message)s')
+# logging.basicConfig(level=logging.INFO, filename='launcher.log', filemode='w',
+#                     format='%(asctime)s - %(levellevelname)s - %(message)s')
 
 
 def resource_path(relative_path):
@@ -98,14 +97,17 @@ def resource_path(relative_path):
 
 
 FOOTER_BUTTONS_ICONS = (
-    (resource_path("assets/boosty.png"),
-     "https://boosty.to/skyrim_rfad_chicken"),
     (resource_path("assets/Patron.png"),
      "https://www.patreon.com/RFaD_ChickenEdition/membership"),
     (resource_path("assets/Discord.png"),
      "https://discord.gg/q2ygjdk8Gv"),
+    (resource_path("assets/mo2.png"),
+     "https://boosty.to/skyrim_rfad_chicken"),
+    (resource_path("assets/book.png"),
+     "https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"),
     (resource_path("assets/boosty.png"),
-     "https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"))
+     "https://boosty.to/skyrim_rfad_chicken")
+)
 
 
 def open_link(link: str) -> None:
@@ -218,12 +220,12 @@ class SkyrimLauncher(QWidget):
         self.timer.start(100)  # Обновление каждые 100 мс
 
     def initUI(self):
-        self.setWindowTitle('RFAD Game Launcher')
-        self.setGeometry(100, 100, 400, 300)
+        #self.setWindowTitle('RFAD Game Launcher')
+        self.setGeometry(200, 200, 800, 480)
 
         # Установка фонового изображения
-        pixmap = QPixmap(resource_path('assets/background.jpg'))
-        palette = QPalette()
+        pixmap = QPixmap(resource_path('assets/background.png'))
+        palette = self.palette()
         palette.setBrush(
             QPalette.Background,
             QBrush(
@@ -235,9 +237,9 @@ class SkyrimLauncher(QWidget):
 
         layout = QVBoxLayout()
 
-        self.title = QLabel('RFAD Game Launcher', self)
-        self.title.setObjectName('title')
-        layout.addWidget(self.title)
+        #self.title = QLabel('RFAD Game Launcher', self)
+        #self.title.setObjectName('title')
+        #layout.addWidget(self.title)
 
         self.selected_game_folder = QLabel('Game folder: None', self)
         layout.addWidget(self.selected_game_folder)

@@ -1,0 +1,1 @@
+Сборка: pyinstaller --windowed --onefile --add-data "assets:assets" main.py

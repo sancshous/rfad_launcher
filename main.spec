@@ -5,17 +5,8 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('assets/background.jpg', 'assets')
-    ],
-    hiddenimports=[
-        'googleapiclient.discovery',
-        'google.oauth2.service_account',
-        'PyQt5.QtWidgets',
-        'py7zr',
-        'zipfile',
-        'shutil',
-    ],
+    datas=[('assets', 'assets')],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

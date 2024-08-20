@@ -2,8 +2,7 @@ import sys
 import webbrowser
 import os
 import io
-import logging
-import subprocess
+from logger import logger
 import zipfile
 from functools import partial
 
@@ -83,12 +82,7 @@ LOCAL_VERSION_FILE = 'version.txt'
 REMOTE_VERSION_FILE = 'remote_version.txt'
 LOCAL_UPDATE_FILE = 'update.7z'
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', handlers=[
-                        logging.FileHandler("launcher.log"),  # Логирование в файл
-                        logging.StreamHandler(sys.stdout)           # Логирование в консоль
-                    ])
 
-logger = logging.getLogger(__name__)
 
 
 def resource_path(relative_path):
@@ -156,8 +150,6 @@ class VersionCheckThread(QThread):
         except FileNotFoundError:
             logger.error("Файл версии игры не найден")
 
-
-
     def download_file(self, service, file_id, destination, mime_type=None):
         if mime_type == 'application/vnd.google-apps.document':
             request = service.files().export_media(fileId=file_id, mimeType='text/plain')
@@ -174,7 +166,7 @@ class VersionCheckThread(QThread):
                 logger.info(f"Загрузка {int(status.progress() * 100)}%.")
         fh.close()
 
-        logger .info(f"Файл {destination} успешно загружен.")
+        logger.info(f"Файл {destination} успешно загружен.")
 
     def get_drive_files(self):
         results = self.service.files().list(
@@ -284,7 +276,6 @@ class SkyrimLauncher(QWidget):
             hbox.addWidget(button)
             hbox.addStretch(1)
             layout.addLayout(hbox)
-
 
         # self.button2 = QToolButton(self)
         # self.button2.setIcon(QIcon(resource_path("assets/middle-button.png")))
@@ -400,7 +391,7 @@ class SkyrimLauncher(QWidget):
         except Exception as e:
             self.update_status.setText(
                 f'Status: Error replacing version file: {
-                    str(e)}')
+                str(e)}')
             logger.error(f"Error replacing version file: {str(e)}")
 
     # def play_game(self):

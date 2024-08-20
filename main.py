@@ -83,8 +83,12 @@ LOCAL_VERSION_FILE = 'version.txt'
 REMOTE_VERSION_FILE = 'remote_version.txt'
 LOCAL_UPDATE_FILE = 'update.7z'
 
-# logging.basicConfig(level=logging.INFO, filename='launcher.log', filemode='w',
-#                     format='%(asctime)s - %(levellevelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', handlers=[
+                        logging.FileHandler("launcher.log"),  # Логирование в файл
+                        logging.StreamHandler(sys.stdout)           # Логирование в консоль
+                    ])
+
+logger = logging.getLogger(__name__)
 
 
 def resource_path(relative_path):
@@ -145,11 +149,14 @@ class VersionCheckThread(QThread):
 
         with open(local_version_path, 'r') as file:
             local_version = file.read().strip()
+        try:
+            with open('remote_version.txt', 'r', encoding='utf-8-sig') as file:
+                remote_version = file.read().strip()
+                self.versionCheckCompleted.emit(local_version, remote_version)
+        except FileNotFoundError:
+            logger.error("Файл версии игры не найден")
 
-        with open('remote_version.txt', 'r', encoding='utf-8-sig') as file:
-            remote_version = file.read().strip()
 
-        self.versionCheckCompleted.emit(local_version, remote_version)
 
     def download_file(self, service, file_id, destination, mime_type=None):
         if mime_type == 'application/vnd.google-apps.document':
@@ -164,10 +171,10 @@ class VersionCheckThread(QThread):
         while not done:
             status, done = downloader.next_chunk()
             if status:
-                logging.info(f"Загрузка {int(status.progress() * 100)}%.")
+                logger.info(f"Загрузка {int(status.progress() * 100)}%.")
         fh.close()
 
-        logging.info(f"Файл {destination} успешно загружен.")
+        logger .info(f"Файл {destination} успешно загружен.")
 
     def get_drive_files(self):
         results = self.service.files().list(
@@ -388,13 +395,13 @@ class SkyrimLauncher(QWidget):
             local_version_path = os.path.join(
                 self.game_path, 'MO2/mods/RFAD_PATCH', LOCAL_VERSION_FILE)
             shutil.copyfile(new_version_path, local_version_path)
-            logging.info(
+            logger.info(
                 f"Local version file replaced with new version: {local_version_path}")
         except Exception as e:
             self.update_status.setText(
                 f'Status: Error replacing version file: {
                     str(e)}')
-            logging.error(f"Error replacing version file: {str(e)}")
+            logger.error(f"Error replacing version file: {str(e)}")
 
     # def play_game(self):
     #     if not self.game_path:
@@ -424,7 +431,7 @@ class SkyrimLauncher(QWidget):
                 z.extractall(extract_to)
         else:
             raise ValueError("Unsupported archive format")
-        logging.info(f"Extracted archive {archive_path} to {extract_to}")
+        logger.info(f"Extracted archive {archive_path} to {extract_to}")
 
     def update_ui(self):
         QApplication.processEvents()  # Принудительное обновление интерфейса

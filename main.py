@@ -308,15 +308,15 @@ class SkyrimLauncher(QWidget):
         layout.addWidget(self.progress_bar)
 
         button_layout = QHBoxLayout()
-
+        button_layout.addStretch(1)
         for url_icon, link in FOOTER_BUTTONS_ICONS:
             button = QToolButton(self)
             button.setIcon(QIcon(url_icon))
-            button.setIconSize(QSize(50, 50))
+            button.setIconSize(QSize(75, 75))
             button.setToolButtonStyle(Qt.ToolButtonIconOnly)
             button.clicked.connect(partial(open_link, link=link))
             button_layout.addWidget(button)
-
+        button_layout.addStretch(1)
         layout.addLayout(button_layout)
 
         self.setLayout(layout)

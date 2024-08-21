@@ -180,14 +180,11 @@ class DownloadThread(QThread):
         # self.downloadFinished.emit()
         request = self.service.files().get_media(fileId=self.file_id)
         with io.FileIO(self.file_name, 'wb') as fh:
-            downloader = MediaIoBaseDownload(fh, request, chunksize=1024 * 1024)
+            downloader = MediaIoBaseDownload(fh, request, chunksize=10 * 1024 * 1024)
 
-            # Принудительно устанавливаем меньший размер буфера
-            #downloader._buffer_size = 1024 * 1024  # 1 MB для более частых обновлений
             done = False
             while not done:
                 status, done = downloader.next_chunk()
-                logging.info("%s %s" % (status, done))
                 if status:
                     progress = int(status.progress() * 100)
                     self.progressChanged.emit(progress)

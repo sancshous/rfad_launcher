@@ -5,6 +5,7 @@ import logging
 import subprocess
 import zipfile
 import webbrowser
+import time
 from functools import partial
 
 import shutil
@@ -67,8 +68,7 @@ LOCAL_VERSION_FILE = 'version.txt'
 REMOTE_VERSION_FILE = 'remote_version.txt'
 LOCAL_UPDATE_FILE = 'update.zip'
 
-logging.basicConfig(level=logging.INFO, filename='launcher.log', filemode='w',
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, filename='launcher.log', format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def resource_path(relative_path):
@@ -172,15 +172,22 @@ class DownloadThread(QThread):
         self.file_name = file_name
 
     def run(self):
+        # file_size = 100  # Например, размер файла в "единицах"
+        # for i in range(file_size + 1):
+        #     time.sleep(0.1)  # Симуляция времени загрузки
+        #     logging.info(f"{i}")
+        #     self.progressChanged.emit(i)  # Отправка прогресса
+        # self.downloadFinished.emit()
         request = self.service.files().get_media(fileId=self.file_id)
         with io.FileIO(self.file_name, 'wb') as fh:
-            downloader = MediaIoBaseDownload(fh, request)
+            downloader = MediaIoBaseDownload(fh, request, chunksize=1024 * 1024)
 
             # Принудительно устанавливаем меньший размер буфера
-            downloader._buffer_size = 1024 * 1024  # 1 MB для более частых обновлений
+            #downloader._buffer_size = 1024 * 1024  # 1 MB для более частых обновлений
             done = False
             while not done:
                 status, done = downloader.next_chunk()
+                logging.info("%s %s" % (status, done))
                 if status:
                     progress = int(status.progress() * 100)
                     self.progressChanged.emit(progress)

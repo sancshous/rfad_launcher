@@ -68,12 +68,12 @@ REMOTE_VERSION_FILE = 'remote_version.txt'
 LOCAL_UPDATE_FILE = 'update.zip'
 
 logging.basicConfig(level=logging.INFO, filename='launcher.log', filemode='w',
-                    format='%(asctime)s - %(levellevelname)s - %(message)s')
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def resource_path(relative_path):
     if getattr(sys, 'frozen', False):
-        base_path = sys._MEIPASS
+        base_path = sys._MEIPASS # noqa
     else:
         base_path = os.path.dirname(__file__)
 
@@ -239,7 +239,10 @@ class SkyrimLauncher(QWidget):
         # Прогресс-бар
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setVisible(False)
-        layout.addWidget(self.progress_bar)
+        self.progress_bar.setFixedWidth(600)
+        q = QHBoxLayout()
+        q.addWidget(self.progress_bar)
+        layout.addLayout(q)
 
         # Иконки соцсетей внизу
         footer_layout = QHBoxLayout()

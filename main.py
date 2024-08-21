@@ -122,10 +122,11 @@ class VersionCheckThread(QThread):
             version_file['id'],
             'remote_version.txt',
             version_file['mimeType'])
-
-        with open(local_version_path, 'r', encoding='utf-8') as file:
-            local_version = file.read().strip()
-
+        try:
+            with open(local_version_path, 'r', encoding='utf-8') as file:
+                local_version = file.read().strip()
+        except FileNotFoundError:
+            local_version = "Not found"
         with open('remote_version.txt', 'r', encoding='utf-8') as file:
             remote_version = file.read().strip()
 

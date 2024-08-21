@@ -393,11 +393,13 @@ class SkyrimLauncher(QWidget):
 
     def on_download_finished(self):
         self.update_status.setText('Status: Unpacking...')
-        # Очистка папки перед распаковкой
+
         patch_path = os.path.join(self.game_path, 'MO2/mods/RFAD_PATCH')
         if not os.path.exists(patch_path):
             os.makedirs(patch_path)
-        self.clean_patch_folder(patch_path, LOCAL_VERSION_FILE)
+        else:
+            # Очистка папки перед распаковкой
+            self.clean_patch_folder(patch_path, LOCAL_VERSION_FILE)
 
         self.extract_archive(
             LOCAL_UPDATE_FILE,

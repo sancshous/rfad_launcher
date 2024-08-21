@@ -172,12 +172,6 @@ class DownloadThread(QThread):
         self.file_name = file_name
 
     def run(self):
-        # file_size = 100  # Например, размер файла в "единицах"
-        # for i in range(file_size + 1):
-        #     time.sleep(0.1)  # Симуляция времени загрузки
-        #     logging.info(f"{i}")
-        #     self.progressChanged.emit(i)  # Отправка прогресса
-        # self.downloadFinished.emit()
         request = self.service.files().get_media(fileId=self.file_id)
         with io.FileIO(self.file_name, 'wb') as fh:
             downloader = MediaIoBaseDownload(fh, request, chunksize=10 * 1024 * 1024)
@@ -401,6 +395,8 @@ class SkyrimLauncher(QWidget):
         self.update_status.setText('Status: Unpacking...')
         # Очистка папки перед распаковкой
         patch_path = os.path.join(self.game_path, 'MO2/mods/RFAD_PATCH')
+        if not os.path.exists(patch_path):
+            os.makedirs(patch_path)
         self.clean_patch_folder(patch_path, LOCAL_VERSION_FILE)
 
         self.extract_archive(

@@ -5,7 +5,6 @@ import logging
 import subprocess
 import zipfile
 import webbrowser
-import time
 from functools import partial
 
 import shutil

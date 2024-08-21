@@ -78,20 +78,21 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-
-FOOTER_BUTTONS_ICONS = [
-    (resource_path("assets/buttons/Patreon.svg"), "https://www.patreon.com/RFaD_ChickenEdition/membership"),
-    #(resource_path("assets/buttons/Discord.svg"), "https://discord.gg/q2ygjdk8Gv"),
-    (resource_path("assets/buttons/MO2.svg"), "https://boosty.to/skyrim_rfad_chicken"),
-    (resource_path("assets/buttons/GameFolder.svg"), "https://boosty.to/skyrim_rfad_chicken"),
-    #(resource_path("assets/buttons/DataBase.svg"), "https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"),
-    (resource_path("assets/buttons/Boosty.svg"), "https://boosty.to/skyrim_rfad_chicken"),
-]
-
-
 def open_link(link: str) -> None:
     browser = webbrowser.get()
     browser.open_new_tab(link)
+    
+def launch_application(app_path: str) -> None:
+    if os.path.exists(app_path):
+        subprocess.Popen(app_path, shell=True)
+    else:
+        logging.error(f"Приложение не найдено: {app_path}")
+
+def open_explorer(path: str) -> None:
+    if os.path.exists(path):
+        subprocess.Popen(f'explorer "{path}"', shell=True)
+    else:
+        logging.error(f"Путь не найден: {path}")
 
 
 class VersionCheckThread(QThread):
@@ -213,6 +214,7 @@ class SkyrimLauncher(QWidget):
 
         layout = QVBoxLayout()
 
+        self.game_path = os.path.abspath(os.getcwd())
         # Заголовок "RFAD"
         header_pixmap = QPixmap(resource_path('assets/Header.svg'))
         self.title = QLabel(self)
@@ -247,16 +249,32 @@ class SkyrimLauncher(QWidget):
         q.addWidget(self.progress_bar)
         layout.addLayout(q)
 
-        # Иконки соцсетей внизу
-        footer_layout = QHBoxLayout()
-        for url_icon, link in FOOTER_BUTTONS_ICONS:
-            button = QLabel(self)
-            button.setPixmap(QPixmap(url_icon))
-            button.setFixedSize(QSize(75, 75))
-            button.setCursor(QCursor(Qt.PointingHandCursor))
-            button.mousePressEvent = partial(self.open_link, link=link)
-            footer_layout.addWidget(button)
-        footer_layout.setAlignment(Qt.AlignCenter)
+       # Иконки соцсетей внизу
+        footer_layout = QVBoxLayout()  # Изменено на QVBoxLayout для добавления текста под кнопками
+        footer_buttons_layout = QHBoxLayout()
+
+        # Кнопка Patreon
+        self.add_footer_button(footer_buttons_layout, 'assets/buttons/Patreon.svg', "Patreon", lambda: open_link("https://www.patreon.com/RFaD_ChickenEdition/membership"))
+        
+        # Кнопка Discord
+        self.add_footer_button(footer_buttons_layout, 'assets/buttons/Discord.svg', "Discord", lambda: open_link("https://discord.gg/q2ygjdk8Gv"))
+        
+        # Кнопка MO2
+        mo2_path = os.path.join(self.game_path, 'MO2', 'ModOrganizer.exe')
+        self.add_footer_button(footer_buttons_layout, 'assets/buttons/MO2.svg', "MO2", lambda: launch_application(mo2_path))
+        
+        # Кнопка GameFolder
+        self.add_footer_button(footer_buttons_layout, 'assets/buttons/GameFolder.svg', "Папка игры", lambda: open_explorer(self.game_path))
+        
+        # Кнопка DataBase
+        self.add_footer_button(footer_buttons_layout, 'assets/buttons/DataBase.svg', "База знаний", lambda: open_link("https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"))
+        
+        # Кнопка Boosty
+        self.add_footer_button(footer_buttons_layout, 'assets/buttons/Boosty.svg', "Boosty", lambda: open_link("https://boosty.to/skyrim_rfad_chicken"))
+        
+        footer_buttons_layout.setAlignment(Qt.AlignCenter)
+        footer_layout.addLayout(footer_buttons_layout)
+        
         layout.addLayout(footer_layout)
 
         self.setLayout(layout)
@@ -268,6 +286,25 @@ class SkyrimLauncher(QWidget):
         font_families = QFontDatabase.applicationFontFamilies(font_id)
         if font_families:
             self.setStyleSheet(style_qss)
+            
+    def add_footer_button(self, layout, svg_path, description, click_action):
+        """Добавляет кнопку футера с описанием под ней."""
+        vbox = QVBoxLayout()
+        button = QLabel(self)
+        button.setPixmap(QPixmap(resource_path(svg_path)))
+        button.setFixedSize(QSize(75, 75))
+        button.setCursor(QCursor(Qt.PointingHandCursor))
+        button.mousePressEvent = lambda event: click_action()  # Используем lambda для корректного вызова
+        button.setAlignment(Qt.AlignCenter)
+
+        label = QLabel(description, self)
+        label.setAlignment(Qt.AlignCenter)
+        label.setStyleSheet("color: white; font-size: 14px;")
+
+        vbox.addWidget(button)
+        vbox.addWidget(label)
+        vbox.setAlignment(Qt.AlignCenter)
+        layout.addLayout(vbox)
             
     def update_background(self):
         # Установка фонового изображения

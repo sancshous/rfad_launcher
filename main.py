@@ -336,7 +336,7 @@ class SkyrimLauncher(QWidget):
         button.setCursor(QCursor(Qt.PointingHandCursor))
         button.mousePressEvent = lambda event: click_action()  # Используем lambda для корректного вызова
         button.setAlignment(Qt.AlignCenter)
-        #button.setToolTip(description)
+        button.setToolTip(description)
         #button.resize(button.sizeHint())
 
         label = QLabel(description, self)

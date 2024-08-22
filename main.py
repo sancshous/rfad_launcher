@@ -47,6 +47,7 @@ QLabel {
 
 QProgressBar {
     background-color: #ccc;
+    color: black;
     border-radius: 5px;
     text-align: center;
 }
@@ -255,6 +256,7 @@ class SkyrimLauncher(QWidget):
         progress_label.setPixmap(progress_pixmap)
         progress_label.setAlignment(Qt.AlignCenter)
         progress_label.setAttribute(Qt.WA_TranslucentBackground)
+        progress_label.setFixedHeight(30)
 
         q = QHBoxLayout()
         q.addWidget(self.progress_bar)

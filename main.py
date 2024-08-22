@@ -418,7 +418,7 @@ class SkyrimLauncher(QWidget):
         QApplication.processEvents()  # Обновление интерфейса
 
     def on_download_finished(self):
-        self.update_status.setText('Updated Status: Unpacking...')
+        self.update_status.setText('Status: Unpacking...')
 
         patch_path = os.path.join(self.game_path, 'MO2/mods/RFAD_PATCH')
         if not os.path.exists(patch_path):

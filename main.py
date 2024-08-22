@@ -420,9 +420,11 @@ class SkyrimLauncher(QWidget):
         QApplication.processEvents()  # Обновление интерфейса
 
     def update_modlist(self):
-        with open(self.path_to_modlist, 'r+') as f:
-            new_modlist = '+RFAD_PATCH\n' + f.read()
+        with open(self.path_to_modlist, 'w+') as f:
+            new_modlist = '+RFAD_PATCH\n' + f.read().replace("+RFAD_PATCH\n", "")
+            f.seek(0)
             f.write(new_modlist)
+            f.truncate()
 
     def on_download_finished(self):
         self.update_status.setText('Status: Unpacking...')

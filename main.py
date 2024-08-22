@@ -207,8 +207,8 @@ class SkyrimLauncher(QWidget):
 
         # Определение пути к папке с игрой (текущая директория)
         self.game_path = os.path.abspath(os.getcwd())
-        #  Определение пути до modlist
-        self.path_to_modlist = os.path.join(self.game_path, 'MO2/profiles/profile/modlist.txt')
+        #  Определение пути до profile
+        self.path_to_profile = os.path.join(self.game_path, 'MO2/profiles/profile')
 
         # Асинхронная проверка обновлений после отображения окна
         self.check_updates_async()
@@ -420,11 +420,24 @@ class SkyrimLauncher(QWidget):
         QApplication.processEvents()  # Обновление интерфейса
 
     def update_modlist(self):
-        with open(self.path_to_modlist, 'w+') as f:
+        path_to_file = os.path.join(self.path_to_profile, 'modlist.txt')
+        with open(path_to_file, 'r+') as f:
             new_modlist = '+RFAD_PATCH\n' + f.read().replace("+RFAD_PATCH\n", "")
             f.seek(0)
             f.write(new_modlist)
             f.truncate()
+
+    @staticmethod
+    def update_order(path_to_file: str, new_list: str, separator: str = "Requiem for the Indifferent.esp"):
+        with (open(path_to_file), 'r+') as f:
+            tail = f.read().split(separator)[-1]
+            f.seek(0)
+            f.write(new_list + tail)
+            f.truncate()
+
+    def get_new_order(self) -> str:
+        """"Новый порядок модов из скачанного файла"""
+        return ""
 
     def on_download_finished(self):
         self.update_status.setText('Status: Unpacking...')
@@ -440,6 +453,9 @@ class SkyrimLauncher(QWidget):
             LOCAL_UPDATE_FILE,
             patch_path)
         self.update_modlist()
+        new_order = self.get_new_order()
+        self.update_order(path_to_file=os.path.join(self.path_to_profile, "plugin.txt"), new_list=new_order)
+        self.update_order(path_to_file=os.path.join(self.path_to_profile, "loadorder.txt"), new_list=new_order)
         self.update_status.setText('Updated Status: Update complete')
         self.progress_bar.setValue(100)
 

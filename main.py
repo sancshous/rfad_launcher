@@ -207,6 +207,8 @@ class SkyrimLauncher(QWidget):
 
         # Определение пути к папке с игрой (текущая директория)
         self.game_path = os.path.abspath(os.getcwd())
+        #  Определение пути до modlist
+        self.path_to_modlist = os.path.join(self.game_path, 'MO2/profiles/profile/modlist.txt')
 
         # Асинхронная проверка обновлений после отображения окна
         self.check_updates_async()
@@ -417,6 +419,11 @@ class SkyrimLauncher(QWidget):
         self.progress_bar.setValue(progress)
         QApplication.processEvents()  # Обновление интерфейса
 
+    def update_modlist(self):
+        with open(self.path_to_modlist, 'r+') as f:
+            new_modlist = '+RFAD_PATCH\n' + f.read()
+            f.write(new_modlist)
+
     def on_download_finished(self):
         self.update_status.setText('Status: Unpacking...')
 
@@ -430,6 +437,7 @@ class SkyrimLauncher(QWidget):
         self.extract_archive(
             LOCAL_UPDATE_FILE,
             patch_path)
+        self.update_modlist()
         self.update_status.setText('Updated Status: Update complete')
         self.progress_bar.setValue(100)
 

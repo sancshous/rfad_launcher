@@ -11,7 +11,7 @@ import shutil
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QHBoxLayout, QGridLayout
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFontDatabase, QCursor
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer, QSize
 
@@ -25,9 +25,22 @@ QLabel#title {
     font-family: 'Magic Cards Cyrillic';
 }
 
+QVBoxLayout {
+    margin-left: 300px;
+}
+
+QToolTip { 
+    background-color: white; 
+    color: black;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 7px;
+}
+
 QLabel {
     color: white;
-    font-size: 24px;
+    font-size: 32px;
+    margin-right: 10px;
     font-family: 'Magic Cards Cyrillic';
 }
 
@@ -106,7 +119,7 @@ class VersionCheckThread(QThread):
     def run(self):
         files = self.get_drive_files()
         version_file = next(
-            (f for f in files if f['mimeType'] == 'application/vnd.google-apps.document'),
+            (f for f in files if f['name'] == 'version'),
             None)
 
         if not version_file:
@@ -122,10 +135,11 @@ class VersionCheckThread(QThread):
             version_file['id'],
             'remote_version.txt',
             version_file['mimeType'])
-
-        with open(local_version_path, 'r', encoding='utf-8') as file:
-            local_version = file.read().strip()
-
+        try:
+            with open(local_version_path, 'r', encoding='utf-8') as file:
+                local_version = file.read().strip()
+        except FileNotFoundError:
+            local_version = "Not found"
         with open('remote_version.txt', 'r', encoding='utf-8') as file:
             remote_version = file.read().strip()
 
@@ -172,12 +186,6 @@ class DownloadThread(QThread):
         self.file_name = file_name
 
     def run(self):
-        # file_size = 100  # Например, размер файла в "единицах"
-        # for i in range(file_size + 1):
-        #     time.sleep(0.1)  # Симуляция времени загрузки
-        #     logging.info(f"{i}")
-        #     self.progressChanged.emit(i)  # Отправка прогресса
-        # self.downloadFinished.emit()
         request = self.service.files().get_media(fileId=self.file_id)
         with io.FileIO(self.file_name, 'wb') as fh:
             downloader = MediaIoBaseDownload(fh, request, chunksize=10 * 1024 * 1024)
@@ -210,7 +218,7 @@ class SkyrimLauncher(QWidget):
 
     def initUI(self):
         self.setWindowTitle('RFAD Game Launcher')
-        self.setGeometry(100, 100, 1024, 768)
+        self.setGeometry(100, 100, 1168, 768)
 
         layout = QVBoxLayout()
 
@@ -220,57 +228,67 @@ class SkyrimLauncher(QWidget):
         self.title = QLabel(self)
         self.title.setPixmap(header_pixmap)
         self.title.setAlignment(Qt.AlignCenter)
+        
         layout.addWidget(self.title)
 
         # Кнопки Play, Update, Exit по центру
-        self.update_button = self.add_svg_button(layout, 'assets/options/Play.svg', self.play_game)
+        
+        self.play_button = self.add_svg_button(layout, 'assets/options/Play.svg', self.play_game)
         self.update_button = self.add_svg_button(layout, 'assets/options/Update.svg', self.start_update)
         self.disable_update_button()  # По умолчанию кнопка заблокирована
         self.exit_button = self.add_svg_button(layout, 'assets/options/Exit.svg', self.close)
 
-        # Версии и статус обновлений внизу по центру
-        version_layout = QHBoxLayout()
-        self.local_version = QLabel('Local Version: N/A', self)
-        self.online_version = QLabel('Online Version: N/A', self)
-        version_layout.addWidget(self.local_version)
-        version_layout.addWidget(self.online_version)
-        version_layout.setAlignment(Qt.AlignCenter)
-        layout.addLayout(version_layout)
-
-        self.update_status = QLabel('Status: Checking for updates...', self)
-        layout.addWidget(self.update_status)
-        self.update_status.setAlignment(Qt.AlignCenter)
-
-        # Прогресс-бар
+         # Прогресс-бар
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setVisible(False)
-        self.progress_bar.setFixedWidth(600)
+        self.progress_bar.setFixedWidth(685)
         q = QHBoxLayout()
         q.addWidget(self.progress_bar)
         layout.addLayout(q)
 
+        # Версии и статус обновлений внизу по центру
+        version_layout = QVBoxLayout()
+        text_layout = QGridLayout()
+        text_layout.setColumnStretch(10, 1)
+        text_layout.setSpacing(0)
+        text_layout.setContentsMargins(0, 0, 0, 0)
+        text_layout.setAlignment(Qt.AlignCenter)
+        self.update_status = QLabel('Updated Status: Checking for updates...', self)
+        text_layout.addWidget(self.update_status, 0, 5, 1, 1)
+
+        self.local_version = QLabel('Local Version: N/A', self)
+        self.online_version = QLabel('Last Version: N/A', self)
+        text_layout.addWidget(self.local_version, 1, 4, 1, 1)
+        text_layout.addWidget(self.online_version, 1, 6, 1, 1)
+        version_layout.addLayout(text_layout)
+        layout.addLayout(version_layout)
+
+
        # Иконки соцсетей внизу
         footer_layout = QVBoxLayout()  # Изменено на QVBoxLayout для добавления текста под кнопками
-        footer_buttons_layout = QHBoxLayout()
+        footer_buttons_layout = QGridLayout()
+        footer_buttons_layout.setColumnStretch(5, 1)
+        footer_buttons_layout.setSpacing(18)
+        footer_buttons_layout.setContentsMargins(0, 0, 0, 0)
 
         # Кнопка Patreon
-        self.add_footer_button(footer_buttons_layout, 'assets/buttons/Patreon.svg', "Patreon", lambda: open_link("https://www.patreon.com/RFaD_ChickenEdition/membership"))
+        self.add_footer_button(footer_buttons_layout, 0, 'assets/buttons/Patreon.svg', "Patreon", lambda: open_link("https://www.patreon.com/RFaD_ChickenEdition/membership"))
         
         # Кнопка Discord
-        self.add_footer_button(footer_buttons_layout, 'assets/buttons/Discord.svg', "Discord", lambda: open_link("https://discord.gg/q2ygjdk8Gv"))
+        self.add_footer_button(footer_buttons_layout, 1,'assets/buttons/Discord.svg', "Discord", lambda: open_link("https://discord.gg/q2ygjdk8Gv"))
         
         # Кнопка MO2
         mo2_path = os.path.join(self.game_path, 'MO2', 'ModOrganizer.exe')
-        self.add_footer_button(footer_buttons_layout, 'assets/buttons/MO2.svg', "MO2", lambda: launch_application(mo2_path))
+        self.add_footer_button(footer_buttons_layout, 2,'assets/buttons/MO2.svg', "MO", lambda: launch_application(mo2_path))
         
         # Кнопка GameFolder
-        self.add_footer_button(footer_buttons_layout, 'assets/buttons/GameFolder.svg', "Папка игры", lambda: open_explorer(self.game_path))
+        self.add_footer_button(footer_buttons_layout, 3, 'assets/buttons/GameFolder.svg', "Каталог", lambda: open_explorer(self.game_path))
         
         # Кнопка DataBase
-        self.add_footer_button(footer_buttons_layout, 'assets/buttons/DataBase.svg', "База знаний", lambda: open_link("https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"))
+        self.add_footer_button(footer_buttons_layout, 4,'assets/buttons/DataBase.svg', "Знания", lambda: open_link("https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"))
         
         # Кнопка Boosty
-        self.add_footer_button(footer_buttons_layout, 'assets/buttons/Boosty.svg', "Boosty", lambda: open_link("https://boosty.to/skyrim_rfad_chicken"))
+        self.add_footer_button(footer_buttons_layout, 5,'assets/buttons/Boosty.svg', "Boosty", lambda: open_link("https://boosty.to/skyrim_rfad_chicken"))
         
         footer_buttons_layout.setAlignment(Qt.AlignCenter)
         footer_layout.addLayout(footer_buttons_layout)
@@ -287,24 +305,26 @@ class SkyrimLauncher(QWidget):
         if font_families:
             self.setStyleSheet(style_qss)
             
-    def add_footer_button(self, layout, svg_path, description, click_action):
+    def add_footer_button(self, layout, place, svg_path, description, click_action):
         """Добавляет кнопку футера с описанием под ней."""
         vbox = QVBoxLayout()
         button = QLabel(self)
         button.setPixmap(QPixmap(resource_path(svg_path)))
-        button.setFixedSize(QSize(75, 75))
+        button.setFixedSize(QSize(100, 100))
         button.setCursor(QCursor(Qt.PointingHandCursor))
         button.mousePressEvent = lambda event: click_action()  # Используем lambda для корректного вызова
         button.setAlignment(Qt.AlignCenter)
+        #button.setToolTip(description)
+        #button.resize(button.sizeHint())
 
         label = QLabel(description, self)
         label.setAlignment(Qt.AlignCenter)
         label.setStyleSheet("color: white; font-size: 14px;")
 
         vbox.addWidget(button)
-        vbox.addWidget(label)
+        #vbox.addWidget(label)
         vbox.setAlignment(Qt.AlignCenter)
-        layout.addLayout(vbox)
+        layout.addWidget(button, 0, place, 1, 1)
             
     def update_background(self):
         # Установка фонового изображения
@@ -356,24 +376,24 @@ class SkyrimLauncher(QWidget):
     def on_version_check_completed(self, local_version, remote_version):
         if local_version is None or remote_version is None:
             self.update_status.setText(
-                'Status: Required files not found on Google Drive')
+                'Updated Status: Required files not found on Google Drive')
             return
 
         self.local_version.setText(f'Local Version: {local_version}')
-        self.online_version.setText(f'Online Version: {remote_version}')
+        self.online_version.setText(f'Last Version: {remote_version}')
 
         if local_version != remote_version:
-            self.update_status.setText('Status: Update available')
+            self.update_status.setText('Updated Status: Update available')
             self.progress_bar.setVisible(True)
             self.enable_update_button()
         else:
-            self.update_status.setText('Status: Up to date')
+            self.update_status.setText('Updated Status: Up to date')
             self.progress_bar.setVisible(False)
             self.disable_update_button()
 
     def start_update(self, event=None):
         if not self.game_path:
-            self.update_status.setText('Status: No game path set')
+            self.update_status.setText('Updated Status: No game path set')
             return
 
         files = self.get_drive_files()
@@ -382,10 +402,10 @@ class SkyrimLauncher(QWidget):
                 'application/x-zip-compressed']),
             None)
         if not update_file:
-            self.update_status.setText('Status: Update file not found')
+            self.update_status.setText('Updated Status: Update file not found')
             return
 
-        self.update_status.setText('Status: Downloading...')
+        self.update_status.setText('Updated Status: Downloading...')
         self.download_thread = DownloadThread(
             service, update_file['id'], LOCAL_UPDATE_FILE)
         self.download_thread.progressChanged.connect(self.update_progress)
@@ -398,15 +418,19 @@ class SkyrimLauncher(QWidget):
         QApplication.processEvents()  # Обновление интерфейса
 
     def on_download_finished(self):
-        self.update_status.setText('Status: Unpacking...')
-        # Очистка папки перед распаковкой
+        self.update_status.setText('Updated Status: Unpacking...')
+
         patch_path = os.path.join(self.game_path, 'MO2/mods/RFAD_PATCH')
-        self.clean_patch_folder(patch_path, LOCAL_VERSION_FILE)
+        if not os.path.exists(patch_path):
+            os.makedirs(patch_path)
+        else:
+            # Очистка папки перед распаковкой
+            self.clean_patch_folder(patch_path, LOCAL_VERSION_FILE)
 
         self.extract_archive(
             LOCAL_UPDATE_FILE,
             patch_path)
-        self.update_status.setText('Status: Update complete')
+        self.update_status.setText('Updated Status: Update complete')
         self.progress_bar.setValue(100)
 
         # Заменяем локальный файл version.txt на новый
@@ -419,7 +443,7 @@ class SkyrimLauncher(QWidget):
             logging.info(
                 f"Local version file replaced with new version: {local_version_path}")
         except Exception as e:
-            error_text = f'Status: Error replacing version file: {str(e)}'
+            error_text = f'Updated Status: Error replacing version file: {str(e)}'
             self.update_status.setText(error_text)
             logging.error(f"Error replacing version file: {str(e)}")
 
@@ -436,15 +460,15 @@ class SkyrimLauncher(QWidget):
 
     def play_game(self, event=None):
         if not self.game_path:
-            self.update_status.setText('Status: No game path set')
+            self.update_status.setText('Updated Status: No game path set')
             return
 
         game_executable = os.path.join(self.game_path, 'skse64_loader.exe')
         if os.path.exists(game_executable):
             subprocess.Popen(game_executable, shell=True)
-            self.update_status.setText('Status: Game started')
+            self.update_status.setText('Updated Status: Game started')
         else:
-            self.update_status.setText('Status: skse64_loader.exe not found')
+            self.update_status.setText('Updated Status: skse64_loader.exe not found')
 
     def get_drive_files(self):
         results = service.files().list(

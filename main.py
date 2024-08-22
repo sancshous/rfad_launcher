@@ -11,8 +11,9 @@ import shutil
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QHBoxLayout, QGridLayout
-from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFontDatabase, QCursor
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QHBoxLayout, QGridLayout, \
+    QStackedWidget
+from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFontDatabase, QCursor, QPainter
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer, QSize
 
 # Встроенное содержимое style.qss
@@ -85,21 +86,24 @@ logging.basicConfig(level=logging.INFO, filename='launcher.log', format='%(ascti
 
 def resource_path(relative_path):
     if getattr(sys, 'frozen', False):
-        base_path = sys._MEIPASS # noqa
+        base_path = sys._MEIPASS  # noqa
     else:
         base_path = os.path.dirname(__file__)
 
     return os.path.join(base_path, relative_path)
 
+
 def open_link(link: str) -> None:
     browser = webbrowser.get()
     browser.open_new_tab(link)
-    
+
+
 def launch_application(app_path: str) -> None:
     if os.path.exists(app_path):
         subprocess.Popen(app_path, shell=True)
     else:
         logging.error(f"Приложение не найдено: {app_path}")
+
 
 def open_explorer(path: str) -> None:
     if os.path.exists(path):
@@ -230,23 +234,32 @@ class SkyrimLauncher(QWidget):
         self.title = QLabel(self)
         self.title.setPixmap(header_pixmap)
         self.title.setAlignment(Qt.AlignCenter)
-        
+
         layout.addWidget(self.title)
 
         # Кнопки Play, Update, Exit по центру
-        
+
         self.play_button = self.add_svg_button(layout, 'assets/options/Play.svg', self.play_game)
         self.update_button = self.add_svg_button(layout, 'assets/options/Update.svg', self.start_update)
         self.disable_update_button()  # По умолчанию кнопка заблокирована
         self.exit_button = self.add_svg_button(layout, 'assets/options/Exit.svg', self.close)
 
-         # Прогресс-бар
+        # Прогресс-бар
         self.progress_bar = QProgressBar(self)
         self.progress_bar.setVisible(False)
-        self.progress_bar.setFixedWidth(685)
+        self.progress_bar.setFixedWidth(635)
+        self.progress_bar.setFixedHeight(10)
+
+        progress_label = QLabel(self)
+        progress_pixmap = QPixmap(resource_path('assets/ProgressBar.svg'))
+        progress_label.setPixmap(progress_pixmap)
+        progress_label.setAlignment(Qt.AlignCenter)
+        progress_label.setAttribute(Qt.WA_TranslucentBackground)
+
         q = QHBoxLayout()
         q.addWidget(self.progress_bar)
-        layout.addLayout(q)
+        progress_label.setLayout(q)
+        layout.addWidget(progress_label)
 
         # Версии и статус обновлений внизу по центру
         version_layout = QVBoxLayout()
@@ -265,8 +278,7 @@ class SkyrimLauncher(QWidget):
         version_layout.addLayout(text_layout)
         layout.addLayout(version_layout)
 
-
-       # Иконки соцсетей внизу
+        # Иконки соцсетей внизу
         footer_layout = QVBoxLayout()  # Изменено на QVBoxLayout для добавления текста под кнопками
         footer_buttons_layout = QGridLayout()
         footer_buttons_layout.setColumnStretch(5, 1)
@@ -274,27 +286,33 @@ class SkyrimLauncher(QWidget):
         footer_buttons_layout.setContentsMargins(0, 0, 0, 0)
 
         # Кнопка Patreon
-        self.add_footer_button(footer_buttons_layout, 0, 'assets/buttons/Patreon.svg', "Patreon", lambda: open_link("https://www.patreon.com/RFaD_ChickenEdition/membership"))
-        
+        self.add_footer_button(footer_buttons_layout, 0, 'assets/buttons/Patreon.svg', "Patreon",
+                               lambda: open_link("https://www.patreon.com/RFaD_ChickenEdition/membership"))
+
         # Кнопка Discord
-        self.add_footer_button(footer_buttons_layout, 1,'assets/buttons/Discord.svg', "Discord", lambda: open_link("https://discord.gg/q2ygjdk8Gv"))
-        
+        self.add_footer_button(footer_buttons_layout, 1, 'assets/buttons/Discord.svg', "Discord",
+                               lambda: open_link("https://discord.gg/q2ygjdk8Gv"))
+
         # Кнопка MO2
         mo2_path = os.path.join(self.game_path, 'MO2', 'ModOrganizer.exe')
-        self.add_footer_button(footer_buttons_layout, 2,'assets/buttons/MO2.svg', "MO", lambda: launch_application(mo2_path))
-        
+        self.add_footer_button(footer_buttons_layout, 2, 'assets/buttons/MO2.svg', "MO",
+                               lambda: launch_application(mo2_path))
+
         # Кнопка GameFolder
-        self.add_footer_button(footer_buttons_layout, 3, 'assets/buttons/GameFolder.svg', "Каталог", lambda: open_explorer(self.game_path))
-        
+        self.add_footer_button(footer_buttons_layout, 3, 'assets/buttons/GameFolder.svg', "Каталог",
+                               lambda: open_explorer(self.game_path))
+
         # Кнопка DataBase
-        self.add_footer_button(footer_buttons_layout, 4,'assets/buttons/DataBase.svg', "Знания", lambda: open_link("https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"))
-        
+        self.add_footer_button(footer_buttons_layout, 4, 'assets/buttons/DataBase.svg', "Знания", lambda: open_link(
+            "https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"))
+
         # Кнопка Boosty
-        self.add_footer_button(footer_buttons_layout, 5,'assets/buttons/Boosty.svg', "Boosty", lambda: open_link("https://boosty.to/skyrim_rfad_chicken"))
-        
+        self.add_footer_button(footer_buttons_layout, 5, 'assets/buttons/Boosty.svg', "Boosty",
+                               lambda: open_link("https://boosty.to/skyrim_rfad_chicken"))
+
         footer_buttons_layout.setAlignment(Qt.AlignCenter)
         footer_layout.addLayout(footer_buttons_layout)
-        
+
         layout.addLayout(footer_layout)
 
         self.setLayout(layout)
@@ -306,7 +324,7 @@ class SkyrimLauncher(QWidget):
         font_families = QFontDatabase.applicationFontFamilies(font_id)
         if font_families:
             self.setStyleSheet(style_qss)
-            
+
     def add_footer_button(self, layout, place, svg_path, description, click_action):
         """Добавляет кнопку футера с описанием под ней."""
         vbox = QVBoxLayout()
@@ -327,7 +345,7 @@ class SkyrimLauncher(QWidget):
         #vbox.addWidget(label)
         vbox.setAlignment(Qt.AlignCenter)
         layout.addWidget(button, 0, place, 1, 1)
-            
+
     def update_background(self):
         # Установка фонового изображения
         pixmap = QPixmap(resource_path('assets/Body.svg'))
@@ -340,7 +358,7 @@ class SkyrimLauncher(QWidget):
                     Qt.IgnoreAspectRatio,
                     Qt.SmoothTransformation)))
         self.setPalette(palette)
-            
+
     def resizeEvent(self, event):
         self.update_background()
         super().resizeEvent(event)

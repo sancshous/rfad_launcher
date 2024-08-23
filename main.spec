@@ -12,10 +12,13 @@ a = Analysis(
         ("assets/buttons/Patreon.svg", "assets/buttons"),
         ("assets/buttons/MO2.svg", "assets/buttons"),
         ("assets/buttons/GameFolder.svg", "assets/buttons"),
+        ("assets/buttons/Discord.svg", "assets/buttons"),
+        ("assets/buttons/DataBase.svg", "assets/buttons"),
         ("assets/buttons/Boosty.svg", "assets/buttons"),
         ("assets/options/Play.svg", "assets/options"),
         ("assets/options/Update.svg", "assets/options"),
         ("assets/options/Exit.svg", "assets/options"),
+        ("assets/ProgressBar.svg", "assets"),
         ("assets/MagicCardsCyrillic/MagicCardsCyrillic.ttf", "assets/MagicCardsCyrillic"),
     ],
     hiddenimports=[

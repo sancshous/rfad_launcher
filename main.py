@@ -77,7 +77,8 @@ credentials = service_account.Credentials.from_service_account_info(
     credentials_info)
 service = build('drive', 'v3', credentials=credentials)
 
-FOLDER_ID = '1-ZJfs05U-aTmu2saVtdJQn3GibxzXQbo'
+#FOLDER_ID = '1-ZJfs05U-aTmu2saVtdJQn3GibxzXQbo' # dev folder
+FOLDER_ID = '1JUOctbsugh2IIEUCWcBkupXYVYoJMg4G' # refrain folder
 LOCAL_VERSION_FILE = 'version.txt'
 REMOTE_VERSION_FILE = 'remote_version.txt'
 LOCAL_UPDATE_FILE = 'update.zip'
@@ -475,28 +476,19 @@ class SkyrimLauncher(QWidget):
             f.truncate()
 
     @staticmethod
-    def update_loadorder(path_to_file: str, new_list: str, separator: str = "Requiem for the Indifferent.esp"):
+    def update_order(path_to_file: str, new_list: str, separator: str):
         with open(path_to_file, 'r+', encoding='utf-8') as f:
             loadorder = f.read()
             head, tail = loadorder.split(separator)
-            mod_list = [f"{x}" for x in new_list.split("\n")]
-            for x in mod_list:
-                head = head.replace(x, "")
-            f.seek(0)
-            f.write(head.rstrip() + new_list + '\n' + separator + tail)
-            f.truncate()
-
-    @staticmethod
-    def update_plugin(path_to_file: str, new_list: str, separator: str = "*Requiem for the Indifferent.esp"):
-        with open(path_to_file, 'r+', encoding='utf-8') as f:
-            plugin = f.read()
-            head, tail = plugin.split(separator)
-            mod_list = [f"*{x}" for x in new_list.split("\n")]
+            if separator == "Requiem for the Indifferent.esp":
+                mod_list = [f"{x}" for x in new_list.split("\n")]
+            else:
+                mod_list = [f"*{x}" for x in new_list.split("\n")]
             for x in mod_list:
                 head = head.replace(x, "")
             new_list = "\n".join(mod_list)
             f.seek(0)
-            f.write(head.rstrip() + new_list + '\n' + separator + tail)
+            f.write(head.rstrip() + '\n' + new_list + '\n' + separator + tail)
             f.truncate()
 
     def download_file(self, service, file_id, destination, mime_type=None):
@@ -551,12 +543,17 @@ class SkyrimLauncher(QWidget):
             patch_path)
         self.update_modlist()
         
-        new_order = self.get_new_order()
-        if new_order:
-            self.update_plugin(path_to_file=os.path.join(self.path_to_profile, "plugins.txt"), new_list=new_order)
-            self.update_loadorder(path_to_file=os.path.join(self.path_to_profile, "loadorder.txt"), new_list=new_order)
-        self.update_status.setText('Updated Status: Update complete')
-        self.progress_bar.setValue(100)
+        try:
+            new_order = self.get_new_order()
+            if new_order:
+                self.update_order(path_to_file=os.path.join(self.path_to_profile, "plugins.txt"), new_list=new_order, separator="*Requiem for the Indifferent.esp")
+                self.update_order(path_to_file=os.path.join(self.path_to_profile, "loadorder.txt"), new_list=new_order, separator="Requiem for the Indifferent.esp")
+            self.update_status.setText('Status: Update complete')
+            self.progress_bar.setValue(100)
+        except Exception as e:
+            error_text = f'Status: Error change loadorder: {str(e)}'
+            self.update_status.setText(error_text)
+            logging.error(f"Error change loadorder: {str(e)}")
 
         # Заменяем локальный файл version.txt на новый
         try:

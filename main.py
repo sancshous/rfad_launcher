@@ -479,10 +479,11 @@ class SkyrimLauncher(QWidget):
         with open(path_to_file, 'r+', encoding='utf-8') as f:
             loadorder = f.read()
             head, tail = loadorder.split(separator)
-            mod_list = [f"{x}\n" for x in new_list.split("\n")]
-            [head.replace(x, "") for x in mod_list]
+            mod_list = [f"{x}" for x in new_list.split("\n")]
+            for x in mod_list:
+                head = head.replace(x, "")
             f.seek(0)
-            f.write(head + new_list + separator + tail)
+            f.write(head.rstrip() + new_list + '\n' + separator + tail)
             f.truncate()
 
     @staticmethod
@@ -490,11 +491,12 @@ class SkyrimLauncher(QWidget):
         with open(path_to_file, 'r+', encoding='utf-8') as f:
             plugin = f.read()
             head, tail = plugin.split(separator)
-            mod_list = [f"*{x}\n" for x in new_list.split("\n")]
-            [head.replace(x, "") for x in mod_list]
+            mod_list = [f"*{x}" for x in new_list.split("\n")]
+            for x in mod_list:
+                head = head.replace(x, "")
             new_list = "\n".join(mod_list)
             f.seek(0)
-            f.write(head + new_list + separator + tail)
+            f.write(head.rstrip() + new_list + '\n' + separator + tail)
             f.truncate()
 
     def download_file(self, service, file_id, destination, mime_type=None):
@@ -530,8 +532,8 @@ class SkyrimLauncher(QWidget):
             modlist_file['id'],
             'modlist.txt',
             modlist_file['mimeType'])
-        with open('modlist.txt', 'r', encoding='utf-8') as file:
-            modlist = file.read()
+        with open('modlist.txt', 'r', encoding='utf-8-sig') as file:
+            modlist = file.read().strip()
             return modlist
 
     def on_download_finished(self):

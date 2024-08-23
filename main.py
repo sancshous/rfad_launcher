@@ -194,7 +194,7 @@ class DownloadThread(QThread):
     def run(self):
         request = self.service.files().get_media(fileId=self.file_id)
         with io.FileIO(self.file_name, 'wb') as fh:
-            downloader = MediaIoBaseDownload(fh, request, chunksize=10 * 1024 * 1024)
+            downloader = MediaIoBaseDownload(fh, request, chunksize=100 * 1024 * 1024)
 
             done = False
             while not done:
@@ -302,7 +302,7 @@ class SkyrimLauncher(QWidget):
         status_layout.setAlignment(Qt.AlignCenter)
         self.update_status = QLabel('Status: Checking for updates...', self)
         status_layout.addWidget(self.update_status)
-        status_layout.setContentsMargins(70, 0, 0, 0)
+        status_layout.setContentsMargins(90, 0, 0, 0)
         text_layout.addLayout(status_layout, 0, 0)
 
         vesrion_layout = QHBoxLayout()
@@ -501,7 +501,7 @@ class SkyrimLauncher(QWidget):
         downloader = MediaIoBaseDownload(fh, request)
 
         # Принудительно устанавливаем меньший размер буфера
-        downloader._buffer_size = 1024 * 1024  # 1 MB для более частых обновлений
+        downloader._buffer_size = 100 * 1024 * 1024  # 1 MB для более частых обновлений
         done = False
 
         while not done:

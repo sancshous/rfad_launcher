@@ -159,3 +159,20 @@
 2024-08-23 14:21:52,974 - INFO - Extracted archive update.zip to C:\Users\Operator\AppData\Local\Programs\Python\Python311\launcher\MO2/mods/RFAD_PATCH
 2024-08-23 14:21:54,713 - INFO - Файл modlist.txt успешно загружен.
 2024-08-23 14:21:54,715 - INFO - Local version file replaced with new version: C:\Users\Operator\AppData\Local\Programs\Python\Python311\launcher\MO2/mods/RFAD_PATCH\version.txt
+2024-08-23 14:41:18,397 - INFO - Файл remote_version.txt успешно загружен.
+2024-08-23 14:41:35,781 - INFO - Файл remote_version.txt успешно загружен.
+2024-08-23 14:46:06,048 - INFO - Файл remote_version.txt успешно загружен.
+2024-08-23 14:51:54,573 - INFO - Folder C:\Users\Operator\AppData\Local\Programs\Python\Python311\launcher\MO2/mods/RFAD_PATCH cleaned, except version.txt.
+2024-08-23 14:52:37,849 - INFO - Extracted archive update.zip to C:\Users\Operator\AppData\Local\Programs\Python\Python311\launcher\MO2/mods/RFAD_PATCH
+2024-08-23 14:52:38,661 - ERROR - Error change loadorder: 'NoneType' object is not subscriptable
+2024-08-23 14:52:38,662 - INFO - Local version file replaced with new version: C:\Users\Operator\AppData\Local\Programs\Python\Python311\launcher\MO2/mods/RFAD_PATCH\version.txt
+2024-08-23 14:53:55,750 - INFO - Файл remote_version.txt успешно загружен.
+2024-08-23 14:55:22,489 - INFO - Файл remote_version.txt успешно загружен.
+2024-08-23 14:55:54,971 - INFO - Файл remote_version.txt успешно загружен.
+2024-08-23 14:57:18,603 - INFO - Файл remote_version.txt успешно загружен.
+2024-08-23 14:57:32,275 - INFO - Файл remote_version.txt успешно загружен.
+2024-08-23 14:57:42,365 - INFO - Файл remote_version.txt успешно загружен.
+2024-08-23 14:59:02,842 - INFO - Файл remote_version.txt успешно загружен.
+2024-08-23 14:59:37,261 - INFO - Файл remote_version.txt успешно загружен.
+2024-08-23 14:59:58,937 - INFO - Файл remote_version.txt успешно загружен.
+2024-08-23 15:00:27,355 - INFO - Файл remote_version.txt успешно загружен.

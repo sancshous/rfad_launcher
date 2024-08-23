@@ -240,7 +240,7 @@ class SkyrimLauncher(QWidget):
         # Определение пути к папке с игрой (текущая директория)
         self.game_path = os.path.abspath(os.getcwd())
         #  Определение пути до profile
-        self.path_to_profile = os.path.join(self.game_path, 'MO2/profiles/profile')
+        self.path_to_profile = os.path.join(self.game_path, 'MO2/profiles/RfaD SE 5.2')
 
         # Асинхронная проверка обновлений после отображения окна
         self.check_updates_async()
@@ -470,7 +470,7 @@ class SkyrimLauncher(QWidget):
 
     def update_modlist(self):
         path_to_file = os.path.join(self.path_to_profile, 'modlist.txt')
-        with open(path_to_file, 'r+') as f:
+        with open(path_to_file, 'r+', encoding='utf-8') as f:
             new_modlist = '+RFAD_PATCH\n' + f.read().replace("+RFAD_PATCH\n", "")
             f.seek(0)
             f.write(new_modlist)
@@ -478,14 +478,48 @@ class SkyrimLauncher(QWidget):
 
     @staticmethod
     def update_order(path_to_file: str, new_list: str, separator: str = "Requiem for the Indifferent.esp"):
-        with (open(path_to_file), 'r+') as f:
+        with open(path_to_file, 'r+', encoding='utf-8') as f:
             tail = f.read().split(separator)[-1]
             f.seek(0)
             f.write(new_list + tail)
             f.truncate()
+            
+    def download_file(self, service, file_id, destination, mime_type=None):
+        if mime_type == 'application/vnd.google-apps.document':
+            request = service.files().export_media(fileId=file_id, mimeType='text/plain')
+        else:
+            request = service.files().get_media(fileId=file_id)
+
+        fh = io.FileIO(destination, 'wb')
+        downloader = MediaIoBaseDownload(fh, request)
+
+        # Принудительно устанавливаем меньший размер буфера
+        downloader._buffer_size = 1024 * 1024  # 1 MB для более частых обновлений
+        done = False
+
+        while not done:
+            status, done = downloader.next_chunk()
+            if status:
+                progress = int(status.progress() * 100)
+                QApplication.processEvents()  # Обновляем интерфейс
+        fh.close()
+
+        logging.info(f"Файл {destination} успешно загружен.")
 
     def get_new_order(self) -> str | None:
         """"Новый порядок модов из скачанного файла"""
+        files = self.get_drive_files()
+        modlist_file = next(
+            (f for f in files if f['name'] == 'modlist'),
+            None)
+        self.download_file(
+            service,
+            modlist_file['id'],
+            'modlist.txt',
+            modlist_file['mimeType'])
+        with open('modlist.txt', 'r', encoding='utf-8') as file:
+            modlist = file.read().strip()
+            return modlist
 
     def on_download_finished(self):
         self.update_status.setText('Status: Unpacking...')
@@ -501,9 +535,10 @@ class SkyrimLauncher(QWidget):
             LOCAL_UPDATE_FILE,
             patch_path)
         self.update_modlist()
+        
         new_order = self.get_new_order()
         if new_order:
-            self.update_order(path_to_file=os.path.join(self.path_to_profile, "plugin.txt"), new_list=new_order)
+            self.update_order(path_to_file=os.path.join(self.path_to_profile, "plugins.txt"), new_list=new_order)
             self.update_order(path_to_file=os.path.join(self.path_to_profile, "loadorder.txt"), new_list=new_order)
         self.update_status.setText('Updated Status: Update complete')
         self.progress_bar.setValue(100)

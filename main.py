@@ -11,10 +11,9 @@ import shutil
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QHBoxLayout, QGridLayout, \
-    QStackedWidget
-from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFontDatabase, QCursor, QPainter
-from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer, QSize
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QHBoxLayout, QGridLayout, QStackedWidget
+from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFontDatabase, QCursor, QPainter, QColor, QLinearGradient
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer, QSize, QRectF
 
 # Встроенное содержимое style.qss
 style_qss = """
@@ -50,6 +49,7 @@ QProgressBar {
     background: linear-gradient(90deg, rgba(157,127,109,1) 0%, rgba(194,171,127,1) 100%);
     color: white;
     border-radius: 5px;
+    border: 1px solid #1A1A1A;
     text-align: center;
 }
 
@@ -205,6 +205,31 @@ class DownloadThread(QThread):
                     self.progressChanged.emit(progress)
                     QApplication.processEvents()  # Обновляем интерфейс
         self.downloadFinished.emit()
+        
+        
+class RoundedProgressBar(QProgressBar):
+    def __init__(self, *args, **kwargs):
+        super(RoundedProgressBar, self).__init__(*args, **kwargs)
+        self.setTextVisible(True)  # Скрыть текст
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        rect = self.rect()
+        radius = 5
+        painter.setBrush(QColor("#1A1A1A"))
+        painter.drawRoundedRect(rect, radius, radius)
+
+        fill_rect = QRectF(rect.x(), rect.y(), rect.width() * (self.value() / self.maximum()), rect.height())
+
+        # Градиент для заполненной части
+        gradient = QLinearGradient(fill_rect.topLeft(), fill_rect.topRight())
+        gradient.setColorAt(0, QColor(157, 127, 109))
+        gradient.setColorAt(1, QColor(194, 171, 127))
+
+        painter.setBrush(gradient)
+        painter.drawRoundedRect(fill_rect, radius, radius)
 
 
 class SkyrimLauncher(QWidget):
@@ -227,7 +252,7 @@ class SkyrimLauncher(QWidget):
 
     def initUI(self):
         self.setWindowTitle('RFAD Game Launcher')
-        self.setGeometry(100, 100, 1168, 768)
+        self.setGeometry(100, 100, 1058, 638)
 
         layout = QVBoxLayout()
 
@@ -243,7 +268,7 @@ class SkyrimLauncher(QWidget):
         # Кнопки Play, Update, Exit по центру
         btn_layout = QGridLayout()
         btn_layout.setSpacing(20)
-        btn_layout.setContentsMargins(0, 0, 0, 20)
+        btn_layout.setContentsMargins(0, 15, 0, 20)
         btn_layout.setAlignment(Qt.AlignCenter)
         self.play_button = self.add_svg_button(btn_layout, 0, 'assets/options/Play.svg', self.play_game)
         self.update_button = self.add_svg_button(btn_layout, 1, 'assets/options/Update.svg', self.start_update)
@@ -252,7 +277,7 @@ class SkyrimLauncher(QWidget):
         layout.addLayout(btn_layout)
 
         # Прогресс-бар
-        self.progress_bar = QProgressBar(self)
+        self.progress_bar = RoundedProgressBar(self)
         self.progress_bar.setVisible(False)
         self.progress_bar.setFixedWidth(635)
         self.progress_bar.setFixedHeight(10)

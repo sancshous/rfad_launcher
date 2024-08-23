@@ -459,9 +459,8 @@ class SkyrimLauncher(QWidget):
             f.write(new_list + tail)
             f.truncate()
 
-    def get_new_order(self) -> str:
+    def get_new_order(self) -> str | None:
         """"Новый порядок модов из скачанного файла"""
-        return ""
 
     def on_download_finished(self):
         self.update_status.setText('Status: Unpacking...')
@@ -478,9 +477,10 @@ class SkyrimLauncher(QWidget):
             patch_path)
         self.update_modlist()
         new_order = self.get_new_order()
-        self.update_order(path_to_file=os.path.join(self.path_to_profile, "plugin.txt"), new_list=new_order)
-        self.update_order(path_to_file=os.path.join(self.path_to_profile, "loadorder.txt"), new_list=new_order)
-        self.update_status.setText('Status: Update complete')
+        if new_order:
+            self.update_order(path_to_file=os.path.join(self.path_to_profile, "plugin.txt"), new_list=new_order)
+            self.update_order(path_to_file=os.path.join(self.path_to_profile, "loadorder.txt"), new_list=new_order)
+        self.update_status.setText('Updated Status: Update complete')
         self.progress_bar.setValue(100)
 
         # Заменяем локальный файл version.txt на новый

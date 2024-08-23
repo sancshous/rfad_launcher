@@ -47,9 +47,7 @@ QLabel {
 QProgressBar {
     background: rgb(157,127,109);
     background: linear-gradient(90deg, rgba(157,127,109,1) 0%, rgba(194,171,127,1) 100%);
-    color: white;
     border-radius: 5px;
-    border: 1px solid #1A1A1A;
     text-align: center;
 }
 
@@ -477,13 +475,24 @@ class SkyrimLauncher(QWidget):
             f.truncate()
 
     @staticmethod
-    def update_order(path_to_file: str, new_list: str, separator: str = "Requiem for the Indifferent.esp"):
+    def update_loadorder(path_to_file: str, new_list: str, separator: str = "Requiem for the Indifferent.esp"):
         with open(path_to_file, 'r+', encoding='utf-8') as f:
-            tail = f.read().split(separator)[-1]
+            loadorder = f.read()
+            head, tail = loadorder.split(separator)
             f.seek(0)
-            f.write(new_list + tail)
+            f.write(head + new_list + separator + tail)
             f.truncate()
-            
+
+    @staticmethod
+    def update_plugin(path_to_file: str, new_list: str, separator: str = "*Requiem for the Indifferent.esp"):
+        with open(path_to_file, 'r+', encoding='utf-8') as f:
+            plugin = f.read()
+            head, tail = plugin.split(separator)
+            new_list = "\n".join(f"*{x}" for x in new_list.split("\n"))
+            f.seek(0)
+            f.write(head + new_list + separator + tail)
+            f.truncate()
+
     def download_file(self, service, file_id, destination, mime_type=None):
         if mime_type == 'application/vnd.google-apps.document':
             request = service.files().export_media(fileId=file_id, mimeType='text/plain')
@@ -538,8 +547,8 @@ class SkyrimLauncher(QWidget):
         
         new_order = self.get_new_order()
         if new_order:
-            self.update_order(path_to_file=os.path.join(self.path_to_profile, "plugins.txt"), new_list=new_order)
-            self.update_order(path_to_file=os.path.join(self.path_to_profile, "loadorder.txt"), new_list=new_order)
+            self.update_plugin(path_to_file=os.path.join(self.path_to_profile, "plugins.txt"), new_list=new_order)
+            self.update_loadorder(path_to_file=os.path.join(self.path_to_profile, "loadorder.txt"), new_list=new_order)
         self.update_status.setText('Updated Status: Update complete')
         self.progress_bar.setValue(100)
 

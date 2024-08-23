@@ -273,7 +273,7 @@ class SkyrimLauncher(QWidget):
         self.play_button = self.add_svg_button(btn_layout, 0, 'assets/options/Play.svg', self.play_game)
         self.update_button = self.add_svg_button(btn_layout, 1, 'assets/options/Update.svg', self.start_update)
         self.disable_update_button()  # По умолчанию кнопка заблокирована
-        self.exit_button = self.add_svg_button(btn_layout, 2, 'assets/options/Exit.svg', self.close)
+        self.exit_button = self.add_svg_button(btn_layout, 2, 'assets/options/Exit.svg', lambda _: sys.exit(0))
         layout.addLayout(btn_layout)
 
         # Прогресс-бар

@@ -46,14 +46,16 @@ QLabel {
 }
 
 QProgressBar {
-    background-color: #ccc;
-    color: black;
+    background: rgb(157,127,109);
+    background: linear-gradient(90deg, rgba(157,127,109,1) 0%, rgba(194,171,127,1) 100%);
+    color: white;
     border-radius: 5px;
     text-align: center;
 }
 
 QProgressBar::chunk {
-    background-color: #0057e7;
+    background: rgb(117,154,174);
+    background: linear-gradient(90deg, rgba(117,154,174,1) 0%, rgba(83,101,136,1) 100%);
     width: 20px;
 }
 """
@@ -239,11 +241,15 @@ class SkyrimLauncher(QWidget):
         layout.addWidget(self.title)
 
         # Кнопки Play, Update, Exit по центру
-
-        self.play_button = self.add_svg_button(layout, 'assets/options/Play.svg', self.play_game)
-        self.update_button = self.add_svg_button(layout, 'assets/options/Update.svg', self.start_update)
+        btn_layout = QGridLayout()
+        btn_layout.setSpacing(20)
+        btn_layout.setContentsMargins(0, 0, 0, 20)
+        btn_layout.setAlignment(Qt.AlignCenter)
+        self.play_button = self.add_svg_button(btn_layout, 0, 'assets/options/Play.svg', self.play_game)
+        self.update_button = self.add_svg_button(btn_layout, 1, 'assets/options/Update.svg', self.start_update)
         self.disable_update_button()  # По умолчанию кнопка заблокирована
-        self.exit_button = self.add_svg_button(layout, 'assets/options/Exit.svg', self.close)
+        self.exit_button = self.add_svg_button(btn_layout, 2, 'assets/options/Exit.svg', self.close)
+        layout.addLayout(btn_layout)
 
         # Прогресс-бар
         self.progress_bar = QProgressBar(self)
@@ -264,21 +270,24 @@ class SkyrimLauncher(QWidget):
         layout.addWidget(progress_label)
 
         # Версии и статус обновлений внизу по центру
-        version_layout = QVBoxLayout()
         text_layout = QGridLayout()
-        text_layout.setColumnStretch(10, 1)
+        status_layout = QHBoxLayout()
         text_layout.setSpacing(0)
         text_layout.setContentsMargins(0, 0, 0, 0)
         text_layout.setAlignment(Qt.AlignCenter)
-        self.update_status = QLabel('Updated Status: Checking for updates...', self)
-        text_layout.addWidget(self.update_status, 0, 5, 1, 1)
+        status_layout.setAlignment(Qt.AlignCenter)
+        self.update_status = QLabel('Status: Checking for updates...', self)
+        status_layout.addWidget(self.update_status)
+        status_layout.setContentsMargins(70, 0, 0, 0)
+        text_layout.addLayout(status_layout, 0, 0)
 
+        vesrion_layout = QHBoxLayout()
         self.local_version = QLabel('Local Version: N/A', self)
         self.online_version = QLabel('Last Version: N/A', self)
-        text_layout.addWidget(self.local_version, 1, 4, 1, 1)
-        text_layout.addWidget(self.online_version, 1, 6, 1, 1)
-        version_layout.addLayout(text_layout)
-        layout.addLayout(version_layout)
+        vesrion_layout.addWidget(self.local_version)
+        vesrion_layout.addWidget(self.online_version)
+        text_layout.addLayout(vesrion_layout, 1, 0)
+        layout.addLayout(text_layout)
 
         # Иконки соцсетей внизу
         footer_layout = QVBoxLayout()  # Изменено на QVBoxLayout для добавления текста под кнопками
@@ -337,11 +346,7 @@ class SkyrimLauncher(QWidget):
         button.mousePressEvent = lambda event: click_action()  # Используем lambda для корректного вызова
         button.setAlignment(Qt.AlignCenter)
         button.setToolTip(description)
-        #button.resize(button.sizeHint())
-
-        label = QLabel(description, self)
-        label.setAlignment(Qt.AlignCenter)
-        label.setStyleSheet("color: white; font-size: 14px;")
+        button.resize(button.sizeHint())
 
         vbox.addWidget(button)
         #vbox.addWidget(label)
@@ -365,15 +370,14 @@ class SkyrimLauncher(QWidget):
         self.update_background()
         super().resizeEvent(event)
 
-    def add_svg_button(self, layout, svg_path, click_action):
+    def add_svg_button(self, layout, place, svg_path, click_action):
         """Добавляет SVG как кнопку с заданным действием по клику."""
         button = QLabel(self)
         button.setPixmap(QPixmap(resource_path(svg_path)))
         button.setCursor(QCursor(Qt.PointingHandCursor))
         button.mousePressEvent = click_action
         button.setAlignment(Qt.AlignCenter)
-        layout.addWidget(button)
-        layout.setAlignment(button, Qt.AlignCenter)
+        layout.addWidget(button, place, 0)
         return button
 
     def disable_update_button(self):
@@ -398,24 +402,24 @@ class SkyrimLauncher(QWidget):
     def on_version_check_completed(self, local_version, remote_version):
         if local_version is None or remote_version is None:
             self.update_status.setText(
-                'Updated Status: Required files not found on Google Drive')
+                'Status: Required files not found on Google Drive')
             return
 
         self.local_version.setText(f'Local Version: {local_version}')
         self.online_version.setText(f'Last Version: {remote_version}')
 
         if local_version != remote_version:
-            self.update_status.setText('Updated Status: Update available')
+            self.update_status.setText('Status: Update available')
             self.progress_bar.setVisible(True)
             self.enable_update_button()
         else:
-            self.update_status.setText('Updated Status: Up to date')
+            self.update_status.setText('Status: Up to date')
             self.progress_bar.setVisible(False)
             self.disable_update_button()
 
     def start_update(self, event=None):
         if not self.game_path:
-            self.update_status.setText('Updated Status: No game path set')
+            self.update_status.setText('Status: No game path set')
             return
 
         files = self.get_drive_files()
@@ -424,10 +428,10 @@ class SkyrimLauncher(QWidget):
                 'application/x-zip-compressed']),
             None)
         if not update_file:
-            self.update_status.setText('Updated Status: Update file not found')
+            self.update_status.setText('Status: Update file not found')
             return
 
-        self.update_status.setText('Updated Status: Downloading...')
+        self.update_status.setText('Status: Downloading...')
         self.download_thread = DownloadThread(
             service, update_file['id'], LOCAL_UPDATE_FILE)
         self.download_thread.progressChanged.connect(self.update_progress)
@@ -476,7 +480,7 @@ class SkyrimLauncher(QWidget):
         new_order = self.get_new_order()
         self.update_order(path_to_file=os.path.join(self.path_to_profile, "plugin.txt"), new_list=new_order)
         self.update_order(path_to_file=os.path.join(self.path_to_profile, "loadorder.txt"), new_list=new_order)
-        self.update_status.setText('Updated Status: Update complete')
+        self.update_status.setText('Status: Update complete')
         self.progress_bar.setValue(100)
 
         # Заменяем локальный файл version.txt на новый
@@ -489,7 +493,7 @@ class SkyrimLauncher(QWidget):
             logging.info(
                 f"Local version file replaced with new version: {local_version_path}")
         except Exception as e:
-            error_text = f'Updated Status: Error replacing version file: {str(e)}'
+            error_text = f'Status: Error replacing version file: {str(e)}'
             self.update_status.setText(error_text)
             logging.error(f"Error replacing version file: {str(e)}")
 
@@ -506,15 +510,15 @@ class SkyrimLauncher(QWidget):
 
     def play_game(self, event=None):
         if not self.game_path:
-            self.update_status.setText('Updated Status: No game path set')
+            self.update_status.setText('Status: No game path set')
             return
 
         game_executable = os.path.join(self.game_path, 'skse64_loader.exe')
         if os.path.exists(game_executable):
             subprocess.Popen(game_executable, shell=True)
-            self.update_status.setText('Updated Status: Game started')
+            self.update_status.setText('Status: Game started')
         else:
-            self.update_status.setText('Updated Status: skse64_loader.exe not found')
+            self.update_status.setText('Status: skse64_loader.exe not found')
 
     def get_drive_files(self):
         results = service.files().list(

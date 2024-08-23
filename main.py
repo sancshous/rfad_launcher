@@ -4,6 +4,7 @@ import io
 import logging
 import subprocess
 import zipfile
+import threading
 import webbrowser
 from functools import partial
 
@@ -538,9 +539,8 @@ class SkyrimLauncher(QWidget):
             # Очистка папки перед распаковкой
             self.clean_patch_folder(patch_path, LOCAL_VERSION_FILE)
 
-        self.extract_archive(
-            LOCAL_UPDATE_FILE,
-            patch_path)
+        thread = threading.Thread(target=self.extract_archive, args=(LOCAL_UPDATE_FILE, patch_path))
+        thread.start()
         self.update_modlist()
         
         try:

@@ -33,6 +33,7 @@ a = Analysis(
         'os',
         'sys',
         'logging',
+        'threading',
         'webbrowser',
         'time',
         'functools',

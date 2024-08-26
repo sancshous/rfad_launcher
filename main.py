@@ -584,13 +584,17 @@ class SkyrimLauncher(QWidget):
         if not self.game_path:
             self.update_status.setText('Status: No game path set')
             return
-
-        game_executable = os.path.join(self.game_path, 'skse64_loader.exe')
-        if os.path.exists(game_executable):
-            subprocess.Popen(game_executable, shell=True)
-            self.update_status.setText('Status: Game started')
-        else:
-            self.update_status.setText('Status: skse64_loader.exe not found')
+        mo2_path = os.path.join(self.game_path, "MO2")
+        if os.path.exists(mo2_path):
+            os.chdir(mo2_path)
+            subprocess.run(["ModOrganizer.exe", "moshortcut://:SKSE"])
+        #
+        # game_executable = os.path.join(self.game_path, 'skse64_loader.exe')
+        # if os.path.exists(game_executable):
+        #     subprocess.Popen(game_executable, shell=True)
+        #     self.update_status.setText('Status: Game started')
+        # else:
+        #     self.update_status.setText('Status: skse64_loader.exe not found')
 
     def get_drive_files(self):
         results = service.files().list(

@@ -240,7 +240,7 @@ class SkyrimLauncher(QWidget):
         # Определение пути к папке с игрой (текущая директория)
         self.game_path = os.path.abspath(os.getcwd())
         #  Определение пути до profile
-        self.path_to_profile = os.path.join(self.game_path, 'MO2/profiles/RfaD SE 5.2')
+        self.path_to_profile = os.path.join(self.game_path, 'MO2/profiles/RFAD')
 
         # Асинхронная проверка обновлений после отображения окна
         self.check_updates_async()

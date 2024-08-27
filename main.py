@@ -103,7 +103,8 @@ def open_link(link: str) -> None:
 
 def launch_application(app_path: str) -> None:
     if os.path.exists(app_path):
-        subprocess.Popen(app_path, shell=True)
+        os.chdir(app_path)
+        subprocess.Popen("ModOrganizer.exe", shell=True)
     else:
         logging.error(f"Приложение не найдено: {app_path}")
 
@@ -330,7 +331,7 @@ class SkyrimLauncher(QWidget):
                                lambda: open_link("https://discord.gg/q2ygjdk8Gv"))
 
         # Кнопка MO2
-        mo2_path = os.path.join(self.game_path, 'MO2', 'ModOrganizer.exe')
+        mo2_path = os.path.join(self.game_path, 'MO2')
         self.add_footer_button(footer_buttons_layout, 2, 'assets/buttons/MO2.svg', "MO",
                                lambda: launch_application(mo2_path))
 

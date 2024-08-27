@@ -588,7 +588,7 @@ class SkyrimLauncher(QWidget):
         mo2_path = os.path.join(self.game_path, "MO2")
         if os.path.exists(mo2_path):
             os.chdir(mo2_path)
-            subprocess.run(["ModOrganizer.exe", "moshortcut://:SKSE"])
+            subprocess.Popen("ModOrganizer.exe moshortcut://:SKSE", shell=True)
         #
         # game_executable = os.path.join(self.game_path, 'skse64_loader.exe')
         # if os.path.exists(game_executable):

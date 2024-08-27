@@ -1,8 +1,10 @@
+import atexit
 import sys
 import os
 import io
 import logging
 import subprocess
+import tempfile
 import zipfile
 import threading
 import webbrowser
@@ -615,10 +617,23 @@ class SkyrimLauncher(QWidget):
     def update_ui(self):
         QApplication.processEvents()  # Принудительное обновление интерфейса
 
+# Временный фикс чтоб не копилось
+def del_temp_dirs():
+    root_dir = tempfile.gettempdir()
+    for entry in os.listdir(root_dir):
+        path = os.path.join(root_dir, entry)
+        if os.path.isdir(path) and entry.startswith('_MEI'):
+            try:
+                shutil.rmtree(path)
+            except Exception as  e:
+                logging.error(f"Error: {e}")
+
 
 if __name__ == '__main__':
+    atexit.register(del_temp_dirs)
     app = QApplication(sys.argv)
     app.setStyleSheet(style_qss)
     launcher = SkyrimLauncher()
     launcher.show()
     sys.exit(app.exec_())
+

@@ -8,7 +8,6 @@ import tempfile
 import zipfile
 import threading
 import webbrowser
-from functools import partial
 
 import shutil
 from google.oauth2 import service_account

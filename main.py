@@ -83,6 +83,8 @@ service = build('drive', 'v3', credentials=credentials)
 FOLDER_ID = '1JUOctbsugh2IIEUCWcBkupXYVYoJMg4G' # refrain folder
 LOCAL_VERSION_FILE = 'version.txt'
 REMOTE_VERSION_FILE = 'remote_version.txt'
+LOCAL_VERSION = ''
+REMOTE_VERSION = ''
 LOCAL_UPDATE_FILE = 'update.zip'
 
 logging.basicConfig(level=logging.INFO, filename='launcher.log', format='%(asctime)s - %(levelname)s - %(message)s')
@@ -254,7 +256,12 @@ class SkyrimLauncher(QWidget):
 
     def initUI(self):
         self.setWindowTitle('RFAD Game Launcher')
-        self.setGeometry(100, 100, 1058, 638)
+        self.setGeometry(0, 0, 1058, 638)
+        frameGm = self.frameGeometry()
+        screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+        centerPoint = QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.move(frameGm.topLeft())
 
         layout = QVBoxLayout()
 
@@ -432,6 +439,8 @@ class SkyrimLauncher(QWidget):
                 'Status: Required files not found on Google Drive')
             return
 
+        LOCAL_VERSION = local_version
+        REMOTE_VERSION = remote_version
         self.local_version.setText(f'Local Version: {local_version}')
         self.online_version.setText(f'Last Version: {remote_version}')
 
@@ -553,6 +562,7 @@ class SkyrimLauncher(QWidget):
                 self.update_order(path_to_file=os.path.join(self.path_to_profile, "plugins.txt"), new_list=new_order, separator="*Requiem for the Indifferent.esp")
                 self.update_order(path_to_file=os.path.join(self.path_to_profile, "loadorder.txt"), new_list=new_order, separator="Requiem for the Indifferent.esp")
             self.update_status.setText('Status: Update complete')
+            self.local_version.setText(f'Local Version: {REMOTE_VERSION}')
             self.progress_bar.setValue(100)
         except Exception as e:
             error_text = f'Status: Error change loadorder: {str(e)}'

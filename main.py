@@ -458,6 +458,7 @@ class SkyrimLauncher(QWidget):
             self.update_status.setText('Status: Update file not found')
             return
 
+        self.disable_update_button()
         self.update_status.setText('Status: Downloading...')
         self.download_thread = DownloadThread(
             service, update_file['id'], LOCAL_UPDATE_FILE)
@@ -591,7 +592,7 @@ class SkyrimLauncher(QWidget):
         if os.path.exists(mo2_path):
             os.chdir(mo2_path)
             subprocess.Popen("ModOrganizer.exe moshortcut://:SKSE", shell=True)
-            sys.exit()
+            self.update_status.setText('Status: Game starting...')
 
     def get_drive_files(self):
         results = service.files().list(

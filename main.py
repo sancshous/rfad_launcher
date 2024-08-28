@@ -473,7 +473,8 @@ class SkyrimLauncher(QWidget):
     def update_modlist(self):
         path_to_file = os.path.join(self.path_to_profile, 'modlist.txt')
         with open(path_to_file, 'r+', encoding='utf-8-sig') as f:
-            new_modlist = '+RFAD_PATCH\n' + f.read().replace("+RFAD_PATCH\n", "")
+            f_line = f.readline()
+            new_modlist = f_line + '+RFAD_PATCH\n' + f.read().replace("+RFAD_PATCH\n", "")
             f.seek(0)
             f.write(new_modlist)
             f.truncate()

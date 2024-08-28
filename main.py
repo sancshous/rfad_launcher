@@ -145,11 +145,11 @@ class VersionCheckThread(QThread):
             'remote_version.txt',
             version_file['mimeType'])
         try:
-            with open(local_version_path, 'r', encoding='utf-8') as file:
+            with open(local_version_path, 'r', encoding='utf-8-sig') as file:
                 local_version = file.read().strip()
         except FileNotFoundError:
             local_version = "Not found"
-        with open('remote_version.txt', 'r', encoding='utf-8') as file:
+        with open('remote_version.txt', 'r', encoding='utf-8-sig') as file:
             remote_version = file.read().strip()
 
         self.versionCheckCompleted.emit(local_version, remote_version)
@@ -275,7 +275,7 @@ class SkyrimLauncher(QWidget):
         self.play_button = self.add_svg_button(btn_layout, 0, 'assets/options/Play.svg', self.play_game)
         self.update_button = self.add_svg_button(btn_layout, 1, 'assets/options/Update.svg', self.start_update)
         self.disable_update_button()  # По умолчанию кнопка заблокирована
-        self.exit_button = self.add_svg_button(btn_layout, 2, 'assets/options/Exit.svg', lambda _: sys.exit(0))
+        self.exit_button = self.add_svg_button(btn_layout, 2, 'assets/options/Exit.svg', lambda _: sys.exit())
         layout.addLayout(btn_layout)
 
         # Прогресс-бар
@@ -472,7 +472,7 @@ class SkyrimLauncher(QWidget):
 
     def update_modlist(self):
         path_to_file = os.path.join(self.path_to_profile, 'modlist.txt')
-        with open(path_to_file, 'r+', encoding='utf-8') as f:
+        with open(path_to_file, 'r+', encoding='utf-8-sig') as f:
             new_modlist = '+RFAD_PATCH\n' + f.read().replace("+RFAD_PATCH\n", "")
             f.seek(0)
             f.write(new_modlist)
@@ -480,7 +480,7 @@ class SkyrimLauncher(QWidget):
 
     @staticmethod
     def update_order(path_to_file: str, new_list: str, separator: str):
-        with open(path_to_file, 'r+', encoding='utf-8') as f:
+        with open(path_to_file, 'r+', encoding='utf-8-sig') as f:
             loadorder = f.read()
             head, tail = loadorder.split(separator)
             if separator == "Requiem for the Indifferent.esp":

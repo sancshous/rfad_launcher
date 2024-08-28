@@ -305,7 +305,7 @@ class SkyrimLauncher(QWidget):
         status_layout.setAlignment(Qt.AlignCenter)
         self.update_status = QLabel('Status: Checking for updates...', self)
         status_layout.addWidget(self.update_status)
-        status_layout.setContentsMargins(90, 0, 0, 0)
+        status_layout.setContentsMargins(137, 0, 0, 0)
         text_layout.addLayout(status_layout, 0, 0)
 
         vesrion_layout = QHBoxLayout()

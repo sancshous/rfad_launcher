@@ -245,7 +245,7 @@ class SkyrimLauncher(QWidget):
         # Определение пути к папке с игрой (текущая директория)
         self.game_path = os.path.abspath(os.getcwd())
         #  Определение пути до profile
-        self.path_to_profile = os.path.join(self.game_path, 'MO2/profiles/RFAD')
+        self.path_to_profile = os.path.join(self.game_path, 'MO2/profiles/RfaD SE 5.2')
 
         # Асинхронная проверка обновлений после отображения окна
         self.check_updates_async()
@@ -602,9 +602,18 @@ class SkyrimLauncher(QWidget):
         mo2_path = os.path.join(self.game_path, "MO2")
         if os.path.exists(mo2_path):
             os.chdir(mo2_path)
+            self.play_button.setEnabled(False)
+            self.play_button.setStyleSheet("opacity: 0.5;")
             t = threading.Thread(target=subprocess.run, args=(["ModOrganizer.exe", "moshortcut://:SKSE"],))
             t.start()
             self.update_status.setText('Status: Game starting...')
+            # Устанавливаем таймер для выполнения кода через 30 секунд
+            timer = threading.Timer(60, self.enable_play_button)
+            timer.start()
+
+    def enable_play_button(self):
+        self.play_button.setEnabled(True)
+        self.play_button.setStyleSheet("opacity: 1;")
 
     def get_drive_files(self):
         results = service.files().list(

@@ -440,8 +440,6 @@ class SkyrimLauncher(QWidget):
                 'Status: Required files not found on Google Drive')
             return
 
-        LOCAL_VERSION = local_version
-        REMOTE_VERSION = remote_version
         self.local_version.setText(f'Local Version: {local_version}')
         self.online_version.setText(f'Last Version: {remote_version}')
 
@@ -563,7 +561,6 @@ class SkyrimLauncher(QWidget):
                 self.update_order(path_to_file=os.path.join(self.path_to_profile, "plugins.txt"), new_list=new_order, separator="*Requiem for the Indifferent.esp")
                 self.update_order(path_to_file=os.path.join(self.path_to_profile, "loadorder.txt"), new_list=new_order, separator="Requiem for the Indifferent.esp")
             self.update_status.setText('Status: Update complete')
-            self.local_version.setText(f'Local Version: {REMOTE_VERSION}')
             self.progress_bar.setValue(100)
         except Exception as e:
             error_text = f'Status: Error change loadorder: {str(e)}'
@@ -579,10 +576,17 @@ class SkyrimLauncher(QWidget):
             shutil.copyfile(new_version_path, local_version_path)
             logging.info(
                 f"Local version file replaced with new version: {local_version_path}")
+
         except Exception as e:
             error_text = f'Status: Error replacing version file: {str(e)}'
             self.update_status.setText(error_text)
             logging.error(f"Error replacing version file: {str(e)}")
+
+        local_version_path = os.path.join(
+            patch_path, LOCAL_VERSION_FILE)
+        with open(local_version_path, 'r', encoding='utf-8-sig') as f:
+            version = f.read()
+            self.local_version.setText(f'Local Version: {version}')
 
     def clean_patch_folder(self, folder_path, exclude_file):
         """Очистить папку, кроме указанного файла."""

@@ -292,7 +292,7 @@ class SkyrimLauncher(QWidget):
             btn_layout, 1, 'assets/options/Update.svg', self.start_update)
         self.disable_update_button()  # По умолчанию кнопка заблокирована
         self.exit_button = self.add_svg_button(
-            btn_layout, 2, 'assets/options/Exit.svg', lambda _: sys.exit())
+            btn_layout, 2, 'assets/options/Exit.svg', lambda _: os._exit(0))
         layout.addLayout(btn_layout)
 
         # Прогресс-бар
@@ -321,7 +321,7 @@ class SkyrimLauncher(QWidget):
         layout.addLayout(status_layout)
 
         container = QWidget()
-        container.setFixedWidth(700)
+        container.setFixedWidth(650)
         vesrion_layout = QHBoxLayout(container)
         self.local_version = QLabel('Local Version: N/A', self)
         self.online_version = QLabel('Last Version: N/A', self)

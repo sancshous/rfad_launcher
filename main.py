@@ -13,8 +13,7 @@ import shutil
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QHBoxLayout, QGridLayout, \
-    QStackedWidget, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QHBoxLayout, QGridLayout
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFontDatabase, QCursor, QPainter, QColor, QLinearGradient
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer, QSize, QRectF
 
@@ -32,8 +31,8 @@ QVBoxLayout {
     margin-left: 300px;
 }
 
-QToolTip { 
-    background-color: white; 
+QToolTip {
+    background-color: white;
     color: black;
     font-weight: bold;
     font-size: 16px;
@@ -79,15 +78,18 @@ credentials = service_account.Credentials.from_service_account_info(
     credentials_info)
 service = build('drive', 'v3', credentials=credentials)
 
-#FOLDER_ID = '1-ZJfs05U-aTmu2saVtdJQn3GibxzXQbo' # dev folder
-FOLDER_ID = '1JUOctbsugh2IIEUCWcBkupXYVYoJMg4G' # refrain folder
+# FOLDER_ID = '1-ZJfs05U-aTmu2saVtdJQn3GibxzXQbo' # dev folder
+FOLDER_ID = '1JUOctbsugh2IIEUCWcBkupXYVYoJMg4G'  # refrain folder
 LOCAL_VERSION_FILE = 'version.txt'
 REMOTE_VERSION_FILE = 'remote_version.txt'
 LOCAL_VERSION = ''
 REMOTE_VERSION = ''
 LOCAL_UPDATE_FILE = 'update.zip'
 
-logging.basicConfig(level=logging.INFO, filename='launcher.log', format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    filename='launcher.log',
+    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def resource_path(relative_path):
@@ -200,7 +202,8 @@ class DownloadThread(QThread):
     def run(self):
         request = self.service.files().get_media(fileId=self.file_id)
         with io.FileIO(self.file_name, 'wb') as fh:
-            downloader = MediaIoBaseDownload(fh, request, chunksize=100 * 1024 * 1024)
+            downloader = MediaIoBaseDownload(
+                fh, request, chunksize=100 * 1024 * 1024)
 
             done = False
             while not done:
@@ -210,8 +213,8 @@ class DownloadThread(QThread):
                     self.progressChanged.emit(progress)
                     QApplication.processEvents()  # Обновляем интерфейс
         self.downloadFinished.emit()
-        
-        
+
+
 class RoundedProgressBar(QProgressBar):
     def __init__(self, *args, **kwargs):
         super(RoundedProgressBar, self).__init__(*args, **kwargs)
@@ -226,7 +229,8 @@ class RoundedProgressBar(QProgressBar):
         painter.setBrush(QColor("#1A1A1A"))
         painter.drawRoundedRect(rect, radius, radius)
 
-        fill_rect = QRectF(rect.x(), rect.y(), rect.width() * (self.value() / self.maximum()), rect.height())
+        fill_rect = QRectF(rect.x(), rect.y(), rect.width()
+                           * (self.value() / self.maximum()), rect.height())
 
         # Градиент для заполненной части
         gradient = QLinearGradient(fill_rect.topLeft(), fill_rect.topRight())
@@ -245,7 +249,8 @@ class SkyrimLauncher(QWidget):
         # Определение пути к папке с игрой (текущая директория)
         self.game_path = os.path.abspath(os.getcwd())
         #  Определение пути до profile
-        self.path_to_profile = os.path.join(self.game_path, 'MO2/profiles/RfaD SE 5.2')
+        self.path_to_profile = os.path.join(
+            self.game_path, 'MO2/profiles/RfaD SE 5.2')
 
         # Асинхронная проверка обновлений после отображения окна
         self.check_updates_async()
@@ -259,7 +264,8 @@ class SkyrimLauncher(QWidget):
         self.setWindowTitle('RFAD Game Launcher')
         self.setGeometry(0, 0, 1058, 638)
         frameGm = self.frameGeometry()
-        screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+        screen = QApplication.desktop().screenNumber(
+            QApplication.desktop().cursor().pos())
         centerPoint = QApplication.desktop().screenGeometry(screen).center()
         frameGm.moveCenter(centerPoint)
         self.move(frameGm.topLeft())
@@ -280,10 +286,13 @@ class SkyrimLauncher(QWidget):
         btn_layout.setSpacing(20)
         btn_layout.setContentsMargins(0, 15, 0, 20)
         btn_layout.setAlignment(Qt.AlignCenter)
-        self.play_button = self.add_svg_button(btn_layout, 0, 'assets/options/Play.svg', self.play_game)
-        self.update_button = self.add_svg_button(btn_layout, 1, 'assets/options/Update.svg', self.start_update)
+        self.play_button = self.add_svg_button(
+            btn_layout, 0, 'assets/options/Play.svg', self.play_game)
+        self.update_button = self.add_svg_button(
+            btn_layout, 1, 'assets/options/Update.svg', self.start_update)
         self.disable_update_button()  # По умолчанию кнопка заблокирована
-        self.exit_button = self.add_svg_button(btn_layout, 2, 'assets/options/Exit.svg', lambda _: sys.exit())
+        self.exit_button = self.add_svg_button(
+            btn_layout, 2, 'assets/options/Exit.svg', lambda _: sys.exit())
         layout.addLayout(btn_layout)
 
         # Прогресс-бар
@@ -305,11 +314,7 @@ class SkyrimLauncher(QWidget):
         layout.addWidget(progress_label)
 
         # Версии и статус обновлений внизу по центру
-        # text_layout = QGridLayout()
         status_layout = QHBoxLayout()
-        # text_layout.setSpacing(0)
-        # text_layout.setContentsMargins(0, 0, 0, 0)
-        # text_layout.setAlignment(Qt.AlignCenter)
         status_layout.setAlignment(Qt.AlignCenter)
         self.update_status = QLabel('Status: Checking for updates...', self)
         status_layout.addWidget(self.update_status)
@@ -328,38 +333,59 @@ class SkyrimLauncher(QWidget):
         layout.addWidget(container)
         layout.setAlignment(container, Qt.AlignmentFlag.AlignCenter)
 
-
         # Иконки соцсетей внизу
-        footer_layout = QVBoxLayout()  # Изменено на QVBoxLayout для добавления текста под кнопками
+        # Изменено на QVBoxLayout для добавления текста под кнопками
+        footer_layout = QVBoxLayout()
         footer_buttons_layout = QGridLayout()
         footer_buttons_layout.setColumnStretch(5, 1)
         footer_buttons_layout.setSpacing(18)
         footer_buttons_layout.setContentsMargins(0, 0, 0, 0)
 
         # Кнопка Patreon
-        self.add_footer_button(footer_buttons_layout, 0, 'assets/buttons/Patreon.svg', "Patreon",
-                               lambda: open_link("https://www.patreon.com/RFaD_ChickenEdition/membership"))
+        self.add_footer_button(
+            footer_buttons_layout,
+            0,
+            'assets/buttons/Patreon.svg',
+            "Patreon",
+            lambda: open_link("https://www.patreon.com/RFaD_ChickenEdition/membership"))
 
         # Кнопка Discord
-        self.add_footer_button(footer_buttons_layout, 1, 'assets/buttons/Discord.svg', "Discord",
-                               lambda: open_link("https://discord.gg/q2ygjdk8Gv"))
+        self.add_footer_button(
+            footer_buttons_layout,
+            1,
+            'assets/buttons/Discord.svg',
+            "Discord",
+            lambda: open_link("https://discord.gg/q2ygjdk8Gv"))
 
         # Кнопка MO2
         mo2_path = os.path.join(self.game_path, 'MO2')
-        self.add_footer_button(footer_buttons_layout, 2, 'assets/buttons/MO2.svg', "MO",
-                               lambda: launch_application(mo2_path))
+        self.add_footer_button(
+            footer_buttons_layout,
+            2,
+            'assets/buttons/MO2.svg',
+            "MO",
+            lambda: launch_application(mo2_path))
 
         # Кнопка GameFolder
-        self.add_footer_button(footer_buttons_layout, 3, 'assets/buttons/GameFolder.svg', "Каталог",
-                               lambda: open_explorer(self.game_path))
+        self.add_footer_button(
+            footer_buttons_layout,
+            3,
+            'assets/buttons/GameFolder.svg',
+            "Каталог",
+            lambda: open_explorer(
+                self.game_path))
 
         # Кнопка DataBase
         self.add_footer_button(footer_buttons_layout, 4, 'assets/buttons/DataBase.svg', "Знания", lambda: open_link(
             "https://docs.google.com/spreadsheets/d/1XsKJBINxQxzXa2TtUoSLqt1Kp0-03Sz2tZ65PlJY94M/edit?gid=1184182319#gid=1184182319&range=A1"))
 
         # Кнопка Boosty
-        self.add_footer_button(footer_buttons_layout, 5, 'assets/buttons/Boosty.svg', "Boosty",
-                               lambda: open_link("https://boosty.to/skyrim_rfad_chicken"))
+        self.add_footer_button(
+            footer_buttons_layout,
+            5,
+            'assets/buttons/Boosty.svg',
+            "Boosty",
+            lambda: open_link("https://boosty.to/skyrim_rfad_chicken"))
 
         footer_buttons_layout.setAlignment(Qt.AlignCenter)
         footer_layout.addLayout(footer_buttons_layout)
@@ -369,27 +395,35 @@ class SkyrimLauncher(QWidget):
         self.setLayout(layout)
 
         # Загрузка шрифта
-        font_id = QFontDatabase.addApplicationFont(resource_path('assets/MagicCardsCyrillic/MagicCardsCyrillic.ttf'))
+        font_id = QFontDatabase.addApplicationFont(
+            resource_path('assets/MagicCardsCyrillic/MagicCardsCyrillic.ttf'))
         if font_id == -1:
             logging.error("Не удалось загрузить шрифт 'Magic Cards Cyrillic'")
         font_families = QFontDatabase.applicationFontFamilies(font_id)
         if font_families:
             self.setStyleSheet(style_qss)
 
-    def add_footer_button(self, layout, place, svg_path, description, click_action):
+    def add_footer_button(
+            self,
+            layout,
+            place,
+            svg_path,
+            description,
+            click_action):
         """Добавляет кнопку футера с описанием под ней."""
         vbox = QVBoxLayout()
         button = QLabel(self)
         button.setPixmap(QPixmap(resource_path(svg_path)))
         button.setFixedSize(QSize(100, 100))
         button.setCursor(QCursor(Qt.PointingHandCursor))
-        button.mousePressEvent = lambda event: click_action()  # Используем lambda для корректного вызова
+        # Используем lambda для корректного вызова
+        button.mousePressEvent = lambda event: click_action()
         button.setAlignment(Qt.AlignCenter)
         button.setToolTip(description)
         button.resize(button.sizeHint())
 
         vbox.addWidget(button)
-        #vbox.addWidget(label)
+        # vbox.addWidget(label)
         vbox.setAlignment(Qt.AlignCenter)
         layout.addWidget(button, 0, place, 1, 1)
 
@@ -557,15 +591,27 @@ class SkyrimLauncher(QWidget):
             # Очистка папки перед распаковкой
             self.clean_patch_folder(patch_path, LOCAL_VERSION_FILE)
 
-        thread = threading.Thread(target=self.extract_archive, args=(LOCAL_UPDATE_FILE, patch_path))
+        thread = threading.Thread(
+            target=self.extract_archive, args=(
+                LOCAL_UPDATE_FILE, patch_path))
         thread.start()
         self.update_modlist()
-        
+
         try:
             new_order = self.get_new_order()
             if new_order:
-                self.update_order(path_to_file=os.path.join(self.path_to_profile, "plugins.txt"), new_list=new_order, separator="*Requiem for the Indifferent.esp")
-                self.update_order(path_to_file=os.path.join(self.path_to_profile, "loadorder.txt"), new_list=new_order, separator="Requiem for the Indifferent.esp")
+                self.update_order(
+                    path_to_file=os.path.join(
+                        self.path_to_profile,
+                        "plugins.txt"),
+                    new_list=new_order,
+                    separator="*Requiem for the Indifferent.esp")
+                self.update_order(
+                    path_to_file=os.path.join(
+                        self.path_to_profile,
+                        "loadorder.txt"),
+                    new_list=new_order,
+                    separator="Requiem for the Indifferent.esp")
             self.update_status.setText('Status: Update complete')
             self.progress_bar.setValue(100)
         except Exception as e:
@@ -614,7 +660,8 @@ class SkyrimLauncher(QWidget):
             os.chdir(mo2_path)
             self.play_button.setEnabled(False)
             self.play_button.setStyleSheet("opacity: 0.5;")
-            t = threading.Thread(target=subprocess.run, args=(["ModOrganizer.exe", "moshortcut://:SKSE"],))
+            t = threading.Thread(target=subprocess.run, args=(
+                ["ModOrganizer.exe", "moshortcut://:SKSE"],))
             t.start()
             self.update_status.setText('Status: Game starting...')
             # Устанавливаем таймер для выполнения кода через 30 секунд
@@ -644,6 +691,8 @@ class SkyrimLauncher(QWidget):
         QApplication.processEvents()  # Принудительное обновление интерфейса
 
 # Временный фикс чтоб не копилось
+
+
 def del_temp_dirs():
     root_dir = tempfile.gettempdir()
     for entry in os.listdir(root_dir):
@@ -653,7 +702,7 @@ def del_temp_dirs():
                 shutil.rmtree(path)
             except Exception as e:
                 pass
-                #logging.error(f"Error: {e}")
+                # logging.error(f"Error: {e}")
 
 
 if __name__ == '__main__':
@@ -663,4 +712,3 @@ if __name__ == '__main__':
     launcher = SkyrimLauncher()
     launcher.show()
     sys.exit(app.exec_())
-

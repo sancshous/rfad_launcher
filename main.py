@@ -700,6 +700,10 @@ class SkyrimLauncher(QWidget):
 
 
 def waiting_ending():
+    try:
+        launcher.close()
+    except:
+        pass
     for p in working_process:
         p.wait()
     for t in working_threads:

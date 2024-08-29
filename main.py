@@ -13,7 +13,8 @@ import shutil
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QHBoxLayout, QGridLayout, QStackedWidget
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QProgressBar, QHBoxLayout, QGridLayout, \
+    QStackedWidget, QSpacerItem, QSizePolicy
 from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFontDatabase, QCursor, QPainter, QColor, QLinearGradient
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer, QSize, QRectF
 
@@ -304,25 +305,29 @@ class SkyrimLauncher(QWidget):
         layout.addWidget(progress_label)
 
         # Версии и статус обновлений внизу по центру
-        text_layout = QGridLayout()
+        # text_layout = QGridLayout()
         status_layout = QHBoxLayout()
-        text_layout.setSpacing(0)
-        text_layout.setContentsMargins(0, 0, 0, 0)
-        text_layout.setAlignment(Qt.AlignCenter)
+        # text_layout.setSpacing(0)
+        # text_layout.setContentsMargins(0, 0, 0, 0)
+        # text_layout.setAlignment(Qt.AlignCenter)
         status_layout.setAlignment(Qt.AlignCenter)
         self.update_status = QLabel('Status: Checking for updates...', self)
         status_layout.addWidget(self.update_status)
-        status_layout.setContentsMargins(137, 0, 0, 0)
-        text_layout.addLayout(status_layout, 0, 0)
+        layout.addLayout(status_layout)
 
-        vesrion_layout = QHBoxLayout()
+        container = QWidget()
+        container.setFixedWidth(700)
+        vesrion_layout = QHBoxLayout(container)
         self.local_version = QLabel('Local Version: N/A', self)
         self.online_version = QLabel('Last Version: N/A', self)
-        self.local_version.setStyleSheet("margin-right: 10px;")
+
         vesrion_layout.addWidget(self.local_version)
+        vesrion_layout.addStretch()
         vesrion_layout.addWidget(self.online_version)
-        text_layout.addLayout(vesrion_layout, 1, 0)
-        layout.addLayout(text_layout)
+        vesrion_layout.setAlignment(Qt.AlignCenter)
+        layout.addWidget(container)
+        layout.setAlignment(container, Qt.AlignmentFlag.AlignCenter)
+
 
         # Иконки соцсетей внизу
         footer_layout = QVBoxLayout()  # Изменено на QVBoxLayout для добавления текста под кнопками
@@ -646,8 +651,9 @@ def del_temp_dirs():
         if os.path.isdir(path) and entry.startswith('_MEI'):
             try:
                 shutil.rmtree(path)
-            except Exception as  e:
-                logging.error(f"Error: {e}")
+            except Exception as e:
+                pass
+                #logging.error(f"Error: {e}")
 
 
 if __name__ == '__main__':

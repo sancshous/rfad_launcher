@@ -42,7 +42,6 @@ QToolTip {
 QLabel {
     color: white;
     font-size: 32px;
-    margin-right: 10px;
     font-family: 'Magic Cards Cyrillic';
 }
 
@@ -311,6 +310,7 @@ class SkyrimLauncher(QWidget):
         vesrion_layout = QHBoxLayout()
         self.local_version = QLabel('Local Version: N/A', self)
         self.online_version = QLabel('Last Version: N/A', self)
+        self.local_version.setStyleSheet("margin-right: 10px;")
         vesrion_layout.addWidget(self.local_version)
         vesrion_layout.addWidget(self.online_version)
         text_layout.addLayout(vesrion_layout, 1, 0)
@@ -404,6 +404,7 @@ class SkyrimLauncher(QWidget):
         button.setCursor(QCursor(Qt.PointingHandCursor))
         button.mousePressEvent = click_action
         button.setAlignment(Qt.AlignCenter)
+        button.setStyleSheet("""margin-right: 0px;""")
         layout.addWidget(button, place, 0)
         return button
 

@@ -91,9 +91,6 @@ logging.basicConfig(
     filename='launcher.log',
     format='%(asctime)s - %(levelname)s - %(message)s')
 
-working_process = []
-working_threads = []
-
 
 def resource_path(relative_path):
     if getattr(sys, 'frozen', False):
@@ -112,8 +109,8 @@ def open_link(link: str) -> None:
 def launch_application(app_path: str) -> None:
     if os.path.exists(app_path):
         os.chdir(app_path)
-        p = subprocess.Popen(["ModOrganizer.exe"])
-        working_process.append(p)
+        t = threading.Thread(target=subprocess.run, args=("ModOrganizer.exe",))
+        t.start()
     else:
         logging.error(f"Приложение не найдено: {app_path}")
 
@@ -216,8 +213,8 @@ class DownloadThread(QThread):
                     self.progressChanged.emit(progress)
                     QApplication.processEvents()  # Обновляем интерфейс
         self.downloadFinished.emit()
-        
-        
+
+
 class RoundedProgressBar(QProgressBar):
     def __init__(self, *args, **kwargs):
         super(RoundedProgressBar, self).__init__(*args, **kwargs)
@@ -232,7 +229,8 @@ class RoundedProgressBar(QProgressBar):
         painter.setBrush(QColor("#1A1A1A"))
         painter.drawRoundedRect(rect, radius, radius)
 
-        fill_rect = QRectF(rect.x(), rect.y(), rect.width() * (self.value() / self.maximum()), rect.height())
+        fill_rect = QRectF(rect.x(), rect.y(), rect.width()
+                           * (self.value() / self.maximum()), rect.height())
 
         # Градиент для заполненной части
         gradient = QLinearGradient(fill_rect.topLeft(), fill_rect.topRight())
@@ -251,7 +249,8 @@ class SkyrimLauncher(QWidget):
         # Определение пути к папке с игрой (текущая директория)
         self.game_path = os.path.abspath(os.getcwd())
         #  Определение пути до profile
-        self.path_to_profile = os.path.join(self.game_path, 'MO2/profiles/RfaD SE 5.2')
+        self.path_to_profile = os.path.join(
+            self.game_path, 'MO2/profiles/RfaD SE 5.2')
 
         # Асинхронная проверка обновлений после отображения окна
         self.check_updates_async()
@@ -265,7 +264,8 @@ class SkyrimLauncher(QWidget):
         self.setWindowTitle('RFAD Game Launcher')
         self.setGeometry(0, 0, 1058, 638)
         frameGm = self.frameGeometry()
-        screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+        screen = QApplication.desktop().screenNumber(
+            QApplication.desktop().cursor().pos())
         centerPoint = QApplication.desktop().screenGeometry(screen).center()
         frameGm.moveCenter(centerPoint)
         self.move(frameGm.topLeft())
@@ -286,10 +286,13 @@ class SkyrimLauncher(QWidget):
         btn_layout.setSpacing(20)
         btn_layout.setContentsMargins(0, 15, 0, 20)
         btn_layout.setAlignment(Qt.AlignCenter)
-        self.play_button = self.add_svg_button(btn_layout, 0, 'assets/options/Play.svg', self.play_game)
-        self.update_button = self.add_svg_button(btn_layout, 1, 'assets/options/Update.svg', self.start_update)
+        self.play_button = self.add_svg_button(
+            btn_layout, 0, 'assets/options/Play.svg', self.play_game)
+        self.update_button = self.add_svg_button(
+            btn_layout, 1, 'assets/options/Update.svg', self.start_update)
         self.disable_update_button()  # По умолчанию кнопка заблокирована
-        self.exit_button = self.add_svg_button(btn_layout, 2, 'assets/options/Exit.svg', lambda _: sys.exit())
+        self.exit_button = self.add_svg_button(
+            btn_layout, 2, 'assets/options/Exit.svg', lambda _: os._exit(0))
         layout.addLayout(btn_layout)
 
         # Прогресс-бар
@@ -318,7 +321,7 @@ class SkyrimLauncher(QWidget):
         layout.addLayout(status_layout)
 
         container = QWidget()
-        container.setFixedWidth(700)
+        container.setFixedWidth(650)
         vesrion_layout = QHBoxLayout(container)
         self.local_version = QLabel('Local Version: N/A', self)
         self.online_version = QLabel('Last Version: N/A', self)
@@ -592,7 +595,6 @@ class SkyrimLauncher(QWidget):
             target=self.extract_archive, args=(
                 LOCAL_UPDATE_FILE, patch_path))
         thread.start()
-        working_threads.append(thread)
         self.update_modlist()
 
         try:
@@ -658,8 +660,9 @@ class SkyrimLauncher(QWidget):
             os.chdir(mo2_path)
             self.play_button.setEnabled(False)
             self.play_button.setStyleSheet("opacity: 0.5;")
-            p = subprocess.Popen(["ModOrganizer.exe", "moshortcut://:SKSE"])
-            working_process.append(p)
+            t = threading.Thread(target=subprocess.run, args=(
+                ["ModOrganizer.exe", "moshortcut://:SKSE"],))
+            t.start()
             self.update_status.setText('Status: Game starting...')
             # Устанавливаем таймер для выполнения кода через 30 секунд
             timer = threading.Timer(60, self.enable_play_button)
@@ -687,29 +690,24 @@ class SkyrimLauncher(QWidget):
     def update_ui(self):
         QApplication.processEvents()  # Принудительное обновление интерфейса
 
-
 # Временный фикс чтоб не копилось
 
 
-def waiting_ending():
-    for p in working_process:
-        p.wait()
-    for t in working_threads:
-        t.join()
-    # root_dir = tempfile.gettempdir()
-    # for entry in os.listdir(root_dir):
-    #     path = os.path.join(root_dir, entry)
-    #     if os.path.isdir(path) and entry.startswith('_MEI'):
-    #         try:
-    #             shutil.rmtree(path)
-    #         except Exception as e:
-    #             pass
+def del_temp_dirs():
+    root_dir = tempfile.gettempdir()
+    for entry in os.listdir(root_dir):
+        path = os.path.join(root_dir, entry)
+        if os.path.isdir(path) and entry.startswith('_MEI'):
+            try:
+                shutil.rmtree(path)
+            except Exception as e:
+                pass
                 # logging.error(f"Error: {e}")
 
 
 if __name__ == '__main__':
+    atexit.register(del_temp_dirs)
     app = QApplication(sys.argv)
-    atexit.register(waiting_ending)
     app.setStyleSheet(style_qss)
     launcher = SkyrimLauncher()
     launcher.show()

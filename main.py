@@ -109,10 +109,10 @@ def open_link(link: str) -> None:
     browser.open_new_tab(link)
 
 
-def launch_application(self, app_path: str) -> None:
+def launch_application(app_path: str) -> None:
     if os.path.exists(app_path):
         os.chdir(app_path)
-        p = subprocess.Popen("ModOrganizer.exe")
+        p = subprocess.Popen(['ModOrganizer.exe'])
         working_process.append(p)
     else:
         logging.error(f"Приложение не найдено: {app_path}")
@@ -700,10 +700,6 @@ class SkyrimLauncher(QWidget):
 
 
 def waiting_ending():
-    try:
-        launcher.close()
-    except:
-        pass
     for p in working_process:
         p.wait()
     for t in working_threads:

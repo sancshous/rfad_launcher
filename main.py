@@ -498,13 +498,13 @@ class SkyrimLauncher(QWidget):
     def update_order(path_to_file: str, new_list: str, separator: str):
         with open(path_to_file, 'r+', encoding='utf-8-sig') as f:
             loadorder = f.read()
-            head, tail = loadorder.split(separator)
             if separator == "Requiem for the Indifferent.esp":
                 mod_list = [f"{x}" for x in new_list.split("\n")]
             else:
                 mod_list = [f"*{x}" for x in new_list.split("\n")]
             for x in mod_list:
-                head = head.replace(x, "")
+                loadorder = loadorder.replace(x, "")
+            head, tail = loadorder.split(separator)
             new_list = "\n".join(mod_list)
             f.seek(0)
             f.write(head.rstrip() + '\n' + new_list + '\n' + separator + tail)

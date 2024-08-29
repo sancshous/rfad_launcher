@@ -91,6 +91,9 @@ logging.basicConfig(
     filename='launcher.log',
     format='%(asctime)s - %(levelname)s - %(message)s')
 
+working_process = []
+working_threads = []
+
 
 def resource_path(relative_path):
     if getattr(sys, 'frozen', False):
@@ -106,11 +109,11 @@ def open_link(link: str) -> None:
     browser.open_new_tab(link)
 
 
-def launch_application(app_path: str) -> None:
+def launch_application(self, app_path: str) -> None:
     if os.path.exists(app_path):
         os.chdir(app_path)
-        t = threading.Thread(target=subprocess.run, args=("ModOrganizer.exe",))
-        t.start()
+        p = subprocess.Popen("ModOrganizer.exe")
+        working_process.append(p)
     else:
         logging.error(f"Приложение не найдено: {app_path}")
 
@@ -245,7 +248,6 @@ class SkyrimLauncher(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
-
         # Определение пути к папке с игрой (текущая директория)
         self.game_path = os.path.abspath(os.getcwd())
         #  Определение пути до profile
@@ -259,6 +261,9 @@ class SkyrimLauncher(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_ui)
         self.timer.start(100)  # Обновление каждые 100 мс
+
+    def close(self, event=None):
+        super().close()
 
     def initUI(self):
         self.setWindowTitle('RFAD Game Launcher')
@@ -292,7 +297,7 @@ class SkyrimLauncher(QWidget):
             btn_layout, 1, 'assets/options/Update.svg', self.start_update)
         self.disable_update_button()  # По умолчанию кнопка заблокирована
         self.exit_button = self.add_svg_button(
-            btn_layout, 2, 'assets/options/Exit.svg', lambda _: os._exit(0))
+            btn_layout, 2, 'assets/options/Exit.svg', self.close)
         layout.addLayout(btn_layout)
 
         # Прогресс-бар
@@ -321,7 +326,7 @@ class SkyrimLauncher(QWidget):
         layout.addLayout(status_layout)
 
         container = QWidget()
-        container.setFixedWidth(650)
+        container.setFixedWidth(700)
         vesrion_layout = QHBoxLayout(container)
         self.local_version = QLabel('Local Version: N/A', self)
         self.online_version = QLabel('Last Version: N/A', self)
@@ -595,6 +600,7 @@ class SkyrimLauncher(QWidget):
             target=self.extract_archive, args=(
                 LOCAL_UPDATE_FILE, patch_path))
         thread.start()
+        working_threads.append(thread)
         self.update_modlist()
 
         try:
@@ -660,9 +666,8 @@ class SkyrimLauncher(QWidget):
             os.chdir(mo2_path)
             self.play_button.setEnabled(False)
             self.play_button.setStyleSheet("opacity: 0.5;")
-            t = threading.Thread(target=subprocess.run, args=(
-                ["ModOrganizer.exe", "moshortcut://:SKSE"],))
-            t.start()
+            p = subprocess.Popen(["ModOrganizer.exe", "moshortcut://:SKSE"])
+            working_process.append(p)
             self.update_status.setText('Status: Game starting...')
             # Устанавливаем таймер для выполнения кода через 30 секунд
             timer = threading.Timer(60, self.enable_play_button)
@@ -690,10 +695,15 @@ class SkyrimLauncher(QWidget):
     def update_ui(self):
         QApplication.processEvents()  # Принудительное обновление интерфейса
 
+
 # Временный фикс чтоб не копилось
 
 
-def del_temp_dirs():
+def waiting_ending():
+    for p in working_process:
+        p.wait()
+    for t in working_threads:
+        t.join()
     root_dir = tempfile.gettempdir()
     for entry in os.listdir(root_dir):
         path = os.path.join(root_dir, entry)
@@ -706,8 +716,8 @@ def del_temp_dirs():
 
 
 if __name__ == '__main__':
-    atexit.register(del_temp_dirs)
     app = QApplication(sys.argv)
+    atexit.register(waiting_ending)
     app.setStyleSheet(style_qss)
     launcher = SkyrimLauncher()
     launcher.show()

@@ -82,6 +82,8 @@ service = build('drive', 'v3', credentials=credentials)
 FOLDER_ID = '1JUOctbsugh2IIEUCWcBkupXYVYoJMg4G' # refrain folder
 LOCAL_VERSION_FILE = 'version.txt'
 REMOTE_VERSION_FILE = 'remote_version.txt'
+LOCAL_VERSION = ''
+REMOTE_VERSION = ''
 LOCAL_UPDATE_FILE = 'update.zip'
 
 logging.basicConfig(level=logging.INFO, filename='launcher.log', format='%(asctime)s - %(levelname)s - %(message)s')
@@ -104,7 +106,8 @@ def open_link(link: str) -> None:
 def launch_application(app_path: str) -> None:
     if os.path.exists(app_path):
         os.chdir(app_path)
-        subprocess.Popen("ModOrganizer.exe", shell=True)
+        t = threading.Thread(target=subprocess.run, args=("ModOrganizer.exe",))
+        t.start()
     else:
         logging.error(f"Приложение не найдено: {app_path}")
 
@@ -241,7 +244,7 @@ class SkyrimLauncher(QWidget):
         # Определение пути к папке с игрой (текущая директория)
         self.game_path = os.path.abspath(os.getcwd())
         #  Определение пути до profile
-        self.path_to_profile = os.path.join(self.game_path, 'MO2/profiles/RFAD')
+        self.path_to_profile = os.path.join(self.game_path, 'MO2/profiles/RfaD SE 5.2')
 
         # Асинхронная проверка обновлений после отображения окна
         self.check_updates_async()
@@ -253,7 +256,12 @@ class SkyrimLauncher(QWidget):
 
     def initUI(self):
         self.setWindowTitle('RFAD Game Launcher')
-        self.setGeometry(100, 100, 1058, 638)
+        self.setGeometry(0, 0, 1058, 638)
+        frameGm = self.frameGeometry()
+        screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+        centerPoint = QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.move(frameGm.topLeft())
 
         layout = QVBoxLayout()
 
@@ -459,6 +467,7 @@ class SkyrimLauncher(QWidget):
             self.update_status.setText('Status: Update file not found')
             return
 
+        self.disable_update_button()
         self.update_status.setText('Status: Downloading...')
         self.download_thread = DownloadThread(
             service, update_file['id'], LOCAL_UPDATE_FILE)
@@ -568,10 +577,17 @@ class SkyrimLauncher(QWidget):
             shutil.copyfile(new_version_path, local_version_path)
             logging.info(
                 f"Local version file replaced with new version: {local_version_path}")
+
         except Exception as e:
             error_text = f'Status: Error replacing version file: {str(e)}'
             self.update_status.setText(error_text)
             logging.error(f"Error replacing version file: {str(e)}")
+
+        local_version_path = os.path.join(
+            patch_path, LOCAL_VERSION_FILE)
+        with open(local_version_path, 'r', encoding='utf-8-sig') as f:
+            version = f.read()
+            self.local_version.setText(f'Local Version: {version}')
 
     def clean_patch_folder(self, folder_path, exclude_file):
         """Очистить папку, кроме указанного файла."""
@@ -591,14 +607,18 @@ class SkyrimLauncher(QWidget):
         mo2_path = os.path.join(self.game_path, "MO2")
         if os.path.exists(mo2_path):
             os.chdir(mo2_path)
-            subprocess.Popen("ModOrganizer.exe moshortcut://:SKSE", shell=True)
-        #
-        # game_executable = os.path.join(self.game_path, 'skse64_loader.exe')
-        # if os.path.exists(game_executable):
-        #     subprocess.Popen(game_executable, shell=True)
-        #     self.update_status.setText('Status: Game started')
-        # else:
-        #     self.update_status.setText('Status: skse64_loader.exe not found')
+            self.play_button.setEnabled(False)
+            self.play_button.setStyleSheet("opacity: 0.5;")
+            t = threading.Thread(target=subprocess.run, args=(["ModOrganizer.exe", "moshortcut://:SKSE"],))
+            t.start()
+            self.update_status.setText('Status: Game starting...')
+            # Устанавливаем таймер для выполнения кода через 30 секунд
+            timer = threading.Timer(60, self.enable_play_button)
+            timer.start()
+
+    def enable_play_button(self):
+        self.play_button.setEnabled(True)
+        self.play_button.setStyleSheet("opacity: 1;")
 
     def get_drive_files(self):
         results = service.files().list(
